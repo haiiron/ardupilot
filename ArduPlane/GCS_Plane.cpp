@@ -75,6 +75,7 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
     case Mode::Number::LOITER_ALT_QLAND:
 #endif
     case Mode::Number::THERMAL:
+    case Mode::Number::Flyhigh_mission://FIXME: Test case
         rate_controlled = true;
         attitude_stabilized = true;
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_YAW_POSITION;

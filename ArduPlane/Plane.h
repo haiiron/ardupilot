@@ -163,6 +163,7 @@ public:
     friend class ModeTakeoff;
     friend class ModeThermal;
     friend class ModeLoiterAltQLand;
+    friend class ModeFlyHigh_mission; //flyhigh mission
 
     Plane(void);
 
@@ -290,7 +291,7 @@ private:
 #if HAL_SOARING_ENABLED
     ModeThermal mode_thermal;
 #endif
-
+    ModeFlyHigh_mission mode_flyhigh;
     // This is the state of the flight control system
     // There are multiple states defined such as MANUAL, FBW-A, AUTO
     Mode *control_mode = &mode_initializing;

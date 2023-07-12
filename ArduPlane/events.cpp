@@ -79,6 +79,7 @@ void Plane::failsafe_short_on_event(enum failsafe_state fstype, ModeReason reaso
     case Mode::Number::GUIDED:
     case Mode::Number::LOITER:
     case Mode::Number::THERMAL:
+    case Mode::Number::Flyhigh_mission: //flyhigh
         if (g.fs_action_short != FS_ACTION_SHORT_BESTGUESS) { // if acton = 0(BESTGUESS) this group of modes take no action
             failsafe.saved_mode_number = control_mode->mode_number();
             if (g.fs_action_short == FS_ACTION_SHORT_FBWA) {
@@ -190,6 +191,7 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
 #endif
     case Mode::Number::TAKEOFF:
     case Mode::Number::INITIALISING:
+    case Mode::Number::Flyhigh_mission: //FIXME: Flyhigh test case 
         break;
     }
     gcs().send_text(MAV_SEVERITY_INFO, "Flight mode = %s", control_mode->name());

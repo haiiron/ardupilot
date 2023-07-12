@@ -53,6 +53,7 @@ public:
 #if HAL_QUADPLANE_ENABLED
         LOITER_ALT_QLAND = 25,
 #endif
+        Flyhigh_mission = 26 // Mode for flyhigh mission
     };
 
     // Constructor
@@ -72,7 +73,6 @@ public:
 
     // returns full text name
     virtual const char *name() const = 0;
-
     // returns a string for this flightmode, exactly 4 bytes
     virtual const char *name4() const = 0;
 
@@ -717,3 +717,31 @@ protected:
 };
 
 #endif
+
+//Flyhigh mission ------------------------------------------------------------------------
+//Flyhigh mission ------------------------------------------------------------------------
+//Flyhigh mission ------------------------------------------------------------------------
+//Flyhigh mission ------------------------------------------------------------------------
+//Flyhigh mission ------------------------------------------------------------------------
+class ModeFlyHigh_mission : public Mode
+{
+public: // 제발 (P v <)
+    using Mode::Mode;
+    Number mode_number() const override { return Number::Flyhigh_mission; }
+    void update() override;
+    void run() override;// 호출되고 파일럿 입력 디코딩을 구현한 다음 위치 및 자세 목표 설정 | 400Hz
+
+protected:
+    bool _enter() override;
+
+    //매서드, 로깅에서 사용되는 이름정의
+    const char *name() const override { return "FlyhighMission"; }
+    const char *name4() const override { return "FLHG"; }
+
+private:
+};
+//Flyhigh mission -----------------------------------------------------------------------//
+//Flyhigh mission -----------------------------------------------------------------------//
+//Flyhigh mission -----------------------------------------------------------------------//
+//Flyhigh mission -----------------------------------------------------------------------//
+//Flyhigh mission -----------------------------------------------------------------------//
