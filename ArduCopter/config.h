@@ -362,7 +362,7 @@
 //
 
 #ifndef FLIGHT_MODE_1
- # define FLIGHT_MODE_1                  Mode::Number::STABILIZE
+ # define FLIGHT_MODE_1                  Mode::Number::FLY_HIGH
 #endif
 #ifndef FLIGHT_MODE_2
  # define FLIGHT_MODE_2                  Mode::Number::STABILIZE

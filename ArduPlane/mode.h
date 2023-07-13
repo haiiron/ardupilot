@@ -53,7 +53,7 @@ public:
 #if HAL_QUADPLANE_ENABLED
         LOITER_ALT_QLAND = 25,
 #endif
-        Flyhigh_mission = 26 // Mode for flyhigh mission
+        Flyhigh_mission = 26, // Mode for flyhigh mission
     };
 
     // Constructor
@@ -359,7 +359,7 @@ class ModeTraining : public Mode
 public:
 
     Number mode_number() const override { return Number::TRAINING; }
-    const char *name() const override { return "TRAINING"; }
+    const char *name() const override { return "TR"; }
     const char *name4() const override { return "TRAN"; }
 
     // methods that affect movement of the vehicle in this mode

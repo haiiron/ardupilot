@@ -294,6 +294,7 @@ bool AP_Arming_Plane::arm(const AP_Arming::Method method, const bool do_arming_c
     delay_arming = true;
 
     gcs().send_text(MAV_SEVERITY_INFO, "Throttle armed");
+    gcs().send_text(MAV_SEVERITY_INFO, "sibal");
 
     return true;
 }

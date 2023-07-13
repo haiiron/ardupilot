@@ -1,4 +1,14 @@
 {
     "cSpell.language": "en-GB",
-    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc"
+    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc",
+    "files.associations": {
+        "typeinfo": "cpp",
+        "__availability": "cpp",
+        "__hash_table": "cpp",
+        "semaphore": "cpp",
+        "*.ipp": "cpp",
+        "*.tcc": "cpp",
+        "functional": "cpp"
+    },
+    "cmake.sourceDirectory": "/Users/jeonhyeonbae/Documents/development/RealObject/Flyhigh/modules/mavlink"
 }

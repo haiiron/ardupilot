@@ -247,8 +247,7 @@ private:
     OpticalFlow optflow;
 #endif
 
-    // Rally Ponints
-    AP_Rally rally;
+    AP_Rally rally; // Rally Ponints
 
 #if OSD_ENABLED || OSD_PARAM_ENABLED
     AP_OSD osd;
@@ -269,6 +268,7 @@ private:
     ModeAuto mode_auto;
     ModeRTL mode_rtl;
     ModeLoiter mode_loiter;
+    ModeFlyHigh_mission mode_flyhigh; //Flyhigh
 #if HAL_ADSB_ENABLED
     ModeAvoidADSB mode_avoidADSB;
 #endif
@@ -291,7 +291,6 @@ private:
 #if HAL_SOARING_ENABLED
     ModeThermal mode_thermal;
 #endif
-    ModeFlyHigh_mission mode_flyhigh;
     // This is the state of the flight control system
     // There are multiple states defined such as MANUAL, FBW-A, AUTO
     Mode *control_mode = &mode_initializing;

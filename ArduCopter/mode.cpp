@@ -31,6 +31,10 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
     Mode *ret = nullptr;
 
     switch (mode) {
+        case Mode::Number::FLY_HIGH:
+            ret = &mode_flyhigh;
+            break;
+
 #if MODE_ACRO_ENABLED == ENABLED
         case Mode::Number::ACRO:
             ret = &mode_acro;
