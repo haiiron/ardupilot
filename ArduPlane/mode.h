@@ -356,6 +356,7 @@ public:
 
 class ModeTraining : public Mode
 {
+    friend class ModeFlyHigh_mission;
 public:
 
     Number mode_number() const override { return Number::TRAINING; }
