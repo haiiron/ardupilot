@@ -23,16 +23,13 @@ bool ModeFlyHigh_mission::_enter()
         lng = ekf_origin.lng;
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO,"ahrs data :: lat is %d , lng is %d",lat,lng);
+    gcs().send_text(MAV_SEVERITY_INFO,"ahrs data :: lat is %ld , lng is %ld",lat,lng);
     return true;
 }
 
 void ModeFlyHigh_mission::update()
 {
-    static int u_i = 0; u_i++; //update 함수 호출 횟수 측정용
-//    hal.console->printf("hal... run on {{update}} function!!!\n holy shit!!!\n");
-//    gcs().send_text(MAV_SEVERITY_INFO,"gcs... is work well on {{update}}!!! worked %d times",u_i);
-
+    gcs().send_text(MAV_SEVERITY_INFO,"Flyhigh call");
 }
 
 void ModeFlyHigh_mission::run()
