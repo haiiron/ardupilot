@@ -16,18 +16,19 @@ float Plane::calc_speed_scaler(void)
         const float airspeed_min = MAX(aparm.airspeed_min, MIN_AIRSPEED_MIN);
         const float scale_min = MIN(0.5, g.scaling_speed / (2.0 * aparm.airspeed_max));
         const float scale_max = MAX(2.0, g.scaling_speed / (0.7 * airspeed_min));
-        if (aspeed > 0.0001f) {
-            speed_scaler = g.scaling_speed / aspeed;
-        } else {
-            speed_scaler = scale_max;
-        }
+        if (aspeed > 0.0001f)
+        { speed_scaler = g.scaling_speed / aspeed; }
+        else
+        { speed_scaler = scale_max; }
+
         speed_scaler = constrain_float(speed_scaler, scale_min, scale_max);
 
 #if HAL_QUADPLANE_ENABLED
-        if (quadplane.in_vtol_mode() && arming.is_armed_and_safety_off()) {
-            // when in VTOL modes limit surface movement at low speed to prevent instability
+        if (quadplane.in_vtol_mode() && arming.is_armed_and_safety_off())
+        { // when in VTOL modes limit surface movement at low speed to prevent instability
             float threshold = airspeed_min * 0.5;
-            if (aspeed < threshold) {
+            if (aspeed < threshold)
+            {
                 float new_scaler = linear_interpolate(0.001, g.scaling_speed / threshold, aspeed, 0, threshold);
                 speed_scaler = MIN(speed_scaler, new_scaler);
 
@@ -62,10 +63,9 @@ float Plane::calc_speed_scaler(void)
  */
 bool Plane::stick_mixing_enabled(void)
 {
-    if (!rc().has_valid_input()) {
-        // never stick mix without valid RC
-        return false;
-    }
+    if (!rc().has_valid_input())
+    { return false; } // never stick mix without valid RC
+
 #if AP_FENCE_ENABLED
     const bool stickmixing = fence_stickmixing();
 #else
@@ -77,10 +77,8 @@ bool Plane::stick_mixing_enabled(void)
         // user may be repositioning
         return false;
     }
-    if (quadplane.in_vtol_land_poscontrol()) {
-        // user may be repositioning
-        return false;
-    }
+    if (quadplane.in_vtol_land_poscontrol())
+    { return false; } // user may be repositioning
 #endif
     if (control_mode->does_auto_throttle() && plane.control_mode->does_auto_navigation()) {
         // we're in an auto mode. Check the stick mixing flag

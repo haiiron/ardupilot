@@ -84,6 +84,10 @@
 #include <AP_LandingGear/AP_LandingGear.h>     // Landing Gear library
 #include <AP_Follow/AP_Follow.h>
 
+//precland for qplane
+#include <FH_PrecLand/FH_PrecLand.h>
+#include <FH_PrecLand/FH_PrecLand_StateMachine.h>
+
 #include "GCS_Mavlink.h"
 #include "GCS_Plane.h"
 #include "quadplane.h"
@@ -159,6 +163,7 @@ public:
     friend class ModeTakeoff;
     friend class ModeThermal;
     friend class ModeLoiterAltQLand;
+    friend class ModeFlyhigh;
 
     Plane(void);
 
@@ -258,6 +263,9 @@ private:
     AP_OSD osd;
 #endif
 
+    FH_PrecLand precland;
+    FH_PrecLand_StateMachine precland_statemachine;
+
     ModeCircle mode_circle;
     ModeStabilize mode_stabilize;
     ModeTraining mode_training;
@@ -291,6 +299,7 @@ private:
 #if HAL_SOARING_ENABLED
     ModeThermal mode_thermal;
 #endif
+    ModeFlyhigh mode_flyhigh;
 
     // This is the state of the flight control system
     // There are multiple states defined such as MANUAL, FBW-A, AUTO
@@ -1132,6 +1141,10 @@ private:
 
     // RC_Channel.cpp
     bool emergency_landing;
+
+    // precision_landing.cpp
+    void init_precland();
+    void update_precland();
 
     // vehicle specific waypoint info helpers
     bool get_wp_distance_m(float &distance) const override;

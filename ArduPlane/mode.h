@@ -16,10 +16,10 @@ class Mode
 {
 public:
 
-    /* Do not allow copies */
+    /* 클래스 복제 방지 */
     CLASS_NO_COPY(Mode);
 
-    // Auto Pilot modes
+    //   오토파일럿 모드
     // ----------------
     enum Number : uint8_t {
         MANUAL        = 0,
@@ -53,6 +53,7 @@ public:
 #if HAL_QUADPLANE_ENABLED
         LOITER_ALT_QLAND = 25,
 #endif
+        FLYHIGH       = 26,
     };
 
     // Constructor
@@ -806,3 +807,25 @@ protected:
 };
 
 #endif
+
+
+//Flyhigh mission ------------------------------------------------------------------------
+class ModeFlyhigh : public Mode
+{
+    friend class ModeTraining;
+public: // 제발 (P v <)
+    using Mode::Mode;
+    Number mode_number() const override { return Number::FLYHIGH; }
+    void update() override;
+    void run() override;// 호출되고 파일럿 입력 디코딩을 구현한 다음 위치 및 자세 목표 설정 | 400Hz
+
+protected:
+    bool _enter() override;
+
+    //매서드, 로깅에서 사용되는 이름정의
+    const char *name() const override { return "FlyhighMission"; }
+    const char *name4() const override { return "FLHG"; }
+
+private:
+};
+//Flyhigh mission -----------------------------------------------------------------------//

@@ -18,14 +18,14 @@ MAV_MODE GCS_MAVLINK_Plane::base_mode() const
 {
     uint8_t _base_mode = MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
 
-    // work out the base_mode. This value is not very useful
+    // base_mode 계산, 크게 유용한 값들은 아님.
     // for APM, but we calculate it as best we can so a generic
     // MAVLink enabled ground station can work out something about
     // what the MAV is up to. The actual bit values are highly
     // ambiguous for most of the APM flight modes. In practice, you
     // only get useful information from the custom_mode, which maps to
     // the APM flight mode and has a well defined meaning in the
-    // ArduPlane documentation
+    // ArduPlane 문서 참조
     switch (plane.control_mode->mode_number()) {
     case Mode::Number::MANUAL:
     case Mode::Number::TRAINING:
@@ -63,6 +63,8 @@ MAV_MODE GCS_MAVLINK_Plane::base_mode() const
     case Mode::Number::QRTL:
     case Mode::Number::LOITER_ALT_QLAND:
 #endif
+    case Mode::Number::FLYHIGH:
+
         _base_mode = MAV_MODE_FLAG_GUIDED_ENABLED |
                      MAV_MODE_FLAG_STABILIZE_ENABLED;
         // note that MAV_MODE_FLAG_AUTO_ENABLED does not match what
@@ -91,9 +93,8 @@ MAV_MODE GCS_MAVLINK_Plane::base_mode() const
     }
 
     // we are armed if we are not initialising
-    if (plane.control_mode != &plane.mode_initializing && plane.arming.is_armed()) {
-        _base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
-    }
+    if (plane.control_mode != &plane.mode_initializing && plane.arming.is_armed())
+    { _base_mode |= MAV_MODE_FLAG_SAFETY_ARMED; }
 
     // indicate we have set a custom mode
     _base_mode |= MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
@@ -102,9 +103,7 @@ MAV_MODE GCS_MAVLINK_Plane::base_mode() const
 }
 
 uint32_t GCS_Plane::custom_mode() const
-{
-    return plane.control_mode->mode_number();
-}
+{ return plane.control_mode->mode_number(); }
 
 MAV_STATE GCS_MAVLINK_Plane::vehicle_system_status() const
 {

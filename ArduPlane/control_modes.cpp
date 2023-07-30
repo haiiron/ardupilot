@@ -6,7 +6,8 @@
 Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
 {
     Mode *ret = nullptr;
-    switch (num) {
+    switch (num)
+    {
     case Mode::Number::MANUAL:
         ret = &mode_manual;
         break;
@@ -94,25 +95,25 @@ Mode *Plane::mode_from_mode_num(const enum Mode::Number num)
         break;
 #endif  // HAL_QUADPLANE_ENABLED
 
+    case Mode::Number::FLYHIGH:
+        ret = &mode_flyhigh;
+        break;
     }
     return ret;
 }
 
 void RC_Channels_Plane::read_mode_switch()
 {
-    if (millis() - plane.failsafe.last_valid_rc_ms > 100) {
-        // only use signals that are less than 0.1s old.
-        return;
-    }
+    if (millis() - plane.failsafe.last_valid_rc_ms > 100)
+    { return; } // only use signals that are less than 0.1s old.
+
     RC_Channels::read_mode_switch();
 }
 
 void RC_Channel_Plane::mode_switch_changed(modeswitch_pos_t new_pos)
 {
-    if (new_pos < 0 || (uint8_t)new_pos > plane.num_flight_modes) {
-        // should not have been called
-        return;
-    }
+    if (new_pos < 0 || (uint8_t)new_pos > plane.num_flight_modes)
+    { return; } // should not have been called
 
     plane.set_mode_by_number((Mode::Number)plane.flight_modes[new_pos].get(), ModeReason::RC_COMMAND);
 }

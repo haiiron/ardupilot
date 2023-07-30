@@ -75,6 +75,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(afs_fs_check,           10,    100,  51),
 #endif
     SCHED_TASK(ekf_check,              10,     75,  54),
+    SCHED_TASK(update_precland,        400,    50,  55), // precland for qplane
     SCHED_TASK_CLASS(GCS,            (GCS*)&plane._gcs,       update_receive,   300,  500,  57),
     SCHED_TASK_CLASS(GCS,            (GCS*)&plane._gcs,       update_send,      300,  750,  60),
 #if AP_SERVORELAYEVENTS_ENABLED

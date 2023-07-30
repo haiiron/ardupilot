@@ -52,9 +52,9 @@ bool AP_Arming_Plane::pre_arm_checks(bool display_failure)
         return true;
     }
     //are arming checks disabled?
-    if (checks_to_perform == 0) {
-        return mandatory_checks(display_failure);
-    }
+    if (checks_to_perform == 0)
+    { return mandatory_checks(display_failure); }
+    
     if (hal.util->was_watchdog_armed()) {
         // on watchdog reset bypass arming checks to allow for
         // in-flight arming if we were armed before the reset. This

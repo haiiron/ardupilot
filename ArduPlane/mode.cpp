@@ -227,6 +227,4 @@ void Mode::reset_controllers()
 }
 
 bool Mode::is_taking_off() const
-{
-    return (plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF);
-}
+{ return (plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF); }

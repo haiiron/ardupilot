@@ -28,8 +28,6 @@ protected:
         return new GCS_MAVLINK_Plane(params, uart);
     }
 
-    AP_GPS::GPS_Status min_status_for_gps_healthy() const override {
-        // NO_FIX simply excludes NO_GPS
-        return AP_GPS::GPS_OK_FIX_3D;
-    }
+    AP_GPS::GPS_Status min_status_for_gps_healthy() const override
+    { return AP_GPS::GPS_OK_FIX_3D; } // NO_FIX simply excludes NO_GPS
 };

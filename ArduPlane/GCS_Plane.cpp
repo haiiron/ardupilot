@@ -27,14 +27,15 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
 
     bool rate_controlled = false;
     bool attitude_stabilized = false;
-    switch (plane.control_mode->mode_number()) {
+    switch (plane.control_mode->mode_number())
+    {
     case Mode::Number::MANUAL:
         break;
 
     case Mode::Number::ACRO:
-#if HAL_QUADPLANE_ENABLED
+    #if HAL_QUADPLANE_ENABLED
     case Mode::Number::QACRO:
-#endif
+    #endif
         rate_controlled = true;
         break;
 
@@ -57,7 +58,8 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
         break;
 
     case Mode::Number::TRAINING:
-        if (!plane.training_manual_roll || !plane.training_manual_pitch) {
+        if (!plane.training_manual_roll || !plane.training_manual_pitch)
+        {
             rate_controlled = true;
             attitude_stabilized = true;
         }
@@ -75,6 +77,7 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
     case Mode::Number::LOITER_ALT_QLAND:
 #endif
     case Mode::Number::THERMAL:
+    case Mode::Number::FLYHIGH:
         rate_controlled = true;
         attitude_stabilized = true;
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_YAW_POSITION;
@@ -89,11 +92,13 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
         break;
     }
 
-    if (rate_controlled) {
+    if (rate_controlled)
+    {
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL; // 3D angular rate control
         control_sensors_health |= MAV_SYS_STATUS_SENSOR_ANGULAR_RATE_CONTROL; // 3D angular rate control
     }
-    if (attitude_stabilized) {
+    if (attitude_stabilized)
+    {
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
         control_sensors_health |= MAV_SYS_STATUS_SENSOR_ATTITUDE_STABILIZATION;
     }
@@ -101,9 +106,9 @@ void GCS_Plane::update_vehicle_sensor_status_flags(void)
     control_sensors_present |= MAV_SYS_STATUS_SENSOR_RC_RECEIVER;
     control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_RC_RECEIVER;
     uint32_t last_valid = plane.failsafe.last_valid_rc_ms;
-    if (millis() - last_valid < 200) {
-        control_sensors_health |= MAV_SYS_STATUS_SENSOR_RC_RECEIVER;
-    }
+
+    if (millis() - last_valid < 200)
+    { control_sensors_health |= MAV_SYS_STATUS_SENSOR_RC_RECEIVER; }
 
 #if AP_TERRAIN_AVAILABLE
     switch (plane.terrain.status()) {
