@@ -118,6 +118,12 @@ public:
     // parameter var table
     static const struct AP_Param::GroupInfo var_info[];
 
+    // backend state
+    struct precland_state {
+        bool    healthy;
+    } _backend_state;
+    AC_PrecLand_Backend         *_backend;  // pointers to backend precision landing driver
+
 private:
     enum class EstimatorType : uint8_t {
         RAW_SENSOR = 0,
@@ -226,12 +232,6 @@ private:
         uint64_t time_usec;
     };
     ObjectArray<inertial_data_frame_s> *_inertial_history;
-
-    // backend state
-    struct precland_state {
-        bool    healthy;
-    } _backend_state;
-    AC_PrecLand_Backend         *_backend;  // pointers to backend precision landing driver
 
     // write out PREC message to log:
     void Write_Precland();

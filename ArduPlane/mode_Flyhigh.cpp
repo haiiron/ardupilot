@@ -12,15 +12,29 @@
 bool ModeFlyhigh::_enter()
 {
     gcs().send_text(MAV_SEVERITY_INFO,"Flyhigh mode is for precland");
+    gcs().send_text(MAV_SEVERITY_INFO,"23-07-31 developed by haiiron : qland와 동일한 착륙모드");
+    
     plane.precland_statemachine.init(); //precland 구현
+
+    plane.mode_qloiter._enter();
+    quadplane.throttle_wait = false;
+    quadplane.setup_target_position();
+    poscontrol.set_state(QuadPlane::QPOS_LAND_DESCEND);
+    poscontrol.pilot_correction_done = false;
+    quadplane.last_land_final_agl = plane.relative_ground_altitude(plane.g.rangefinder_landing);
+    quadplane.landing_detect.lower_limit_start_ms = 0;
+    quadplane.landing_detect.land_start_ms = 0;
+#if AP_LANDINGGEAR_ENABLED
+    plane.g2.landing_gear.deploy_for_landing();
+#endif
+#if AP_FENCE_ENABLED
+    plane.fence.auto_disable_fence_for_landing();
+#endif
 	return true;
 }
 
 void ModeFlyhigh::update()
-{  }
+{  plane.mode_qstabilize.update(); }
 
 void ModeFlyhigh::run()
-{
-    static int r_i = 0; r_i++; //run 함수 호출 횟수 측정용
-    gcs().send_text(MAV_SEVERITY_INFO,"gcs... is work well on {{run}}!!! worked %d times",r_i);
- }
+{ plane.mode_qloiter.run(); }

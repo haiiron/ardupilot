@@ -6,7 +6,7 @@ extern const AP_HAL::HAL& hal;
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
 
 // Constructor
-FH_PrecLand_SITL_Gazebo::FH_PrecLand_SITL_Gazebo(const FH_PrecLand& frontend, AC_PrecLand::precland_state& state)
+FH_PrecLand_SITL_Gazebo::FH_PrecLand_SITL_Gazebo(const FH_PrecLand& frontend, FH_PrecLand::precland_state& state)
     : FH_PrecLand_Backend(frontend, state),
       irlock()
 {

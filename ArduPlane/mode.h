@@ -610,6 +610,7 @@ class ModeQLoiter : public Mode
 {
 friend class QuadPlane;
 friend class ModeQLand;
+friend class ModeFlyhigh;
 public:
 
     Number mode_number() const override { return Number::QLOITER; }
@@ -814,10 +815,12 @@ class ModeFlyhigh : public Mode
 {
     friend class ModeTraining;
 public: // 제발 (P v <)
-    using Mode::Mode;
+
     Number mode_number() const override { return Number::FLYHIGH; }
     void update() override;
     void run() override;// 호출되고 파일럿 입력 디코딩을 구현한 다음 위치 및 자세 목표 설정 | 400Hz
+    
+    bool is_vtol_mode() const override { return true; }
 
 protected:
     bool _enter() override;

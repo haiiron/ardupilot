@@ -13,16 +13,16 @@
 // declare backend classes
 class FH_PrecLand_Backend;
 class FH_PrecLand_IRLock;
-class AC_PrecLand_SITL_Gazebo;
-class AC_PrecLand_SITL;
+class FH_PrecLand_SITL_Gazebo;
+class FH_PrecLand_SITL;
 
 class FH_PrecLand
 {
     // declare backends as friends
     friend class FH_PrecLand_Backend;
     friend class FH_PrecLand_IRLock;
-    friend class AC_PrecLand_SITL_Gazebo;
-    friend class AC_PrecLand_SITL;
+    friend class FH_PrecLand_SITL_Gazebo;
+    friend class FH_PrecLand_SITL;
 
 public:
     FH_PrecLand();
@@ -206,6 +206,7 @@ private:
         uint64_t time_usec;
     };
     ObjectArray<inertial_data_frame_s> *_inertial_history;
+
 
     // backend state
     struct precland_state {
