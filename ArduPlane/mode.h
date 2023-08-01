@@ -654,6 +654,7 @@ protected:
 
 class ModeQRTL : public Mode
 {
+    friend class ModeFlyhigh;
 public:
 
     Number mode_number() const override { return Number::QRTL; }

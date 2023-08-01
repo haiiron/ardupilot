@@ -3,7 +3,7 @@
 
 extern const AP_HAL::HAL& hal;
 
-// table of user settable parameters
+// 사용자 설정 파라미터들
 const AP_Param::GroupInfo AP_L1_Control::var_info[] = {
     // @Param: PERIOD
     // @DisplayName: L1 control period
@@ -49,32 +49,38 @@ const AP_Param::GroupInfo AP_L1_Control::var_info[] = {
 //Modified to enable period and damping of guidance loop to be set explicitly
 //Modified to provide explicit control over capture angle
 
+//항공기 속도 벡터와 경로에 대한 기준 벡터 사이의 각도에 기반한 뱅크 각도 명령.
+//S. Park, J. Deyst 및 J. P. How, "궤적 추적을 위한 새로운 비선형 안내 로직"
+//AIAA 지침, 항법 및 제어 절차 , 2004년 8월 컨퍼런스  /  AIAA-2004-4900.
+//원 추적에 PD 컨트롤을 사용하여 L1 길이 미만의 로이터 반지름을 활성화하도록 수정됨
+//가이드 루프의 주기 및 감쇠를 명시적으로 설정할 수 있도록 수정됨
+//캡처 각도에 대한 명시적인 제어를 제공하도록 수정됨
 
 /*
   Wrap AHRS yaw if in reverse - radians
+  역방향인 경우 AHRS 요를 감습니다 - 라디안
  */
 float AP_L1_Control::get_yaw() const
 {
-    if (_reverse) {
-        return wrap_PI(M_PI + _ahrs.yaw);
-    }
+    if (_reverse) { return wrap_PI(M_PI + _ahrs.yaw); }
+    
     return _ahrs.yaw;
 }
 
 /*
   Wrap AHRS yaw sensor if in reverse - centi-degress
+  후진할 경우 AHRS 요 센서를 감쌀 수 있음. - centi-degress
  */
 int32_t AP_L1_Control::get_yaw_sensor() const
 {
-    if (_reverse) {
-        return wrap_180_cd(18000 + _ahrs.yaw_sensor);
-    }
+    if (_reverse) { return wrap_180_cd(18000 + _ahrs.yaw_sensor); }
+    
     return _ahrs.yaw_sensor;
 }
 
 /*
-  return the bank angle needed to achieve tracking from the last
-  update_*() operation
+  마지막 추적에 필요한 뱅크 각도를 반환
+  update_*() 작업
  */
 int32_t AP_L1_Control::nav_roll_cd(void) const
 {
@@ -85,31 +91,24 @@ int32_t AP_L1_Control::nav_roll_cd(void) const
 }
 
 /*
-  return the lateral acceleration needed to achieve tracking from the last
-  update_*() operation
+  마지막 추적에 필요한 횡방향 가속도를 반환
+  update_*() 작업
  */
 float AP_L1_Control::lateral_acceleration(void) const
-{
-    return _latAccDem;
-}
+{ return _latAccDem; }
 
 int32_t AP_L1_Control::nav_bearing_cd(void) const
-{
-    return wrap_180_cd(RadiansToCentiDegrees(_nav_bearing));
-}
+{ return wrap_180_cd(RadiansToCentiDegrees(_nav_bearing)); }
 
 int32_t AP_L1_Control::bearing_error_cd(void) const
-{
-    return RadiansToCentiDegrees(_bearing_error);
-}
+{return RadiansToCentiDegrees(_bearing_error); }
 
 int32_t AP_L1_Control::target_bearing_cd(void) const
-{
-    return wrap_180_cd(_target_bearing_cd);
-}
+{ return wrap_180_cd(_target_bearing_cd); }
 
 /*
   this is the turn distance assuming a 90 degree turn
+  90도 회전을 추정한 회전 거리
  */
 float AP_L1_Control::turn_distance(float wp_radius) const
 {
@@ -124,14 +123,19 @@ float AP_L1_Control::turn_distance(float wp_radius) const
   This function allows straight ahead mission legs to avoid thinking
   they have reached the waypoint early, which makes things like camera
   trigger and ball drop at exact positions under mission control much easier
+  
+  주어진 회전 각도에 대한 회전 거리에 근사
+  turn_angle은 90도 이상이고 90도 회전 거리를 사용하나, 그렇지 않은 경우 회전 거리가 선형으로 감소.
+  이 기능을 사용하면 직진 미션 다리를 사용하여 사고를 피할 수 있음.
+  그들은 카메라와 같은 것들을 만드는 경유지에 일찍 도달
+  임무 제어 하에 정확한 위치에서 트리거 및 bool 드롭이 훨씬 쉽다(?)
  */
 float AP_L1_Control::turn_distance(float wp_radius, float turn_angle) const
 {
     float distance_90 = turn_distance(wp_radius);
     turn_angle = fabsf(turn_angle);
-    if (turn_angle >= 90) {
-        return distance_90;
-    }
+    if (turn_angle >= 90)
+    { return distance_90; }
     return distance_90 * turn_angle / 90.0f;
 }
 
@@ -148,29 +152,27 @@ float AP_L1_Control::loiter_radius(const float radius) const
 
     float eas2tas_sq = sq(_ahrs.get_EAS2TAS());
 
-    if (is_zero(sanitized_bank_limit) || is_zero(nominal_velocity_sea_level) ||
-        is_zero(lateral_accel_sea_level)) {
+    if (is_zero(sanitized_bank_limit) || is_zero(nominal_velocity_sea_level) || is_zero(lateral_accel_sea_level))
+    {
         // Missing a sane input for calculating the limit, or the user has
         // requested a straight scaling with altitude. This will always vary
         // with the current altitude, but will at least protect the airframe
         return radius * eas2tas_sq;
-    } else {
+    }
+    else
+    {
         float sea_level_radius = sq(nominal_velocity_sea_level) / lateral_accel_sea_level;
-        if (sea_level_radius > radius) {
-            // If we've told the plane that its sea level radius is unachievable fallback to
-            // straight altitude scaling
-            return radius * eas2tas_sq;
-        } else {
-            // select the requested radius, or the required altitude scale, whichever is safer
-            return MAX(sea_level_radius * eas2tas_sq, radius);
-        }
+        
+        if (sea_level_radius > radius) // 비행기가 해수면 반경이 달성할 수 없다고 판단되면, 직선 고도 스케일링으로 되돌아감.
+        { return radius * eas2tas_sq; }
+        
+        else // 요청된 반경 또는 필요한 고도 척도를 더 안전한 경우로 선택
+        { return MAX(sea_level_radius * eas2tas_sq, radius); }
     }
 }
 
 bool AP_L1_Control::reached_loiter_target(void)
-{
-    return _WPcircle;
-}
+{ return _WPcircle; }
 
 /**
    prevent indecision in our turning by using our previous turn
@@ -183,7 +185,8 @@ void AP_L1_Control::_prevent_indecision(float &Nu)
     if (fabsf(Nu) > Nu_limit &&
         fabsf(_last_Nu) > Nu_limit &&
         labs(wrap_180_cd(_target_bearing_cd - get_yaw_sensor())) > 12000 &&
-        Nu * _last_Nu < 0.0f) {
+        Nu * _last_Nu < 0.0f)
+        {
         // we are moving away from the target waypoint and pointing
         // away from the waypoint (not flying backwards). The sign
         // of Nu has also changed, which means we are
@@ -192,7 +195,7 @@ void AP_L1_Control::_prevent_indecision(float &Nu)
     }
 }
 
-// update L1 control for waypoint navigation
+// 웨이포인트 탐색을 위한 L1 컨트롤 업데이트
 void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &next_WP, float dist_min)
 {
 
@@ -203,23 +206,22 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
 
     uint32_t now = AP_HAL::micros();
     float dt = (now - _last_update_waypoint_us) * 1.0e-6f;
-    if (dt > 1) {
-        // controller hasn't been called for an extended period of
-        // time.  Reinitialise it.
-        _L1_xtrack_i = 0.0f;
-    }
-    if (dt > 0.1) {
-        dt = 0.1;
-    }
+
+    if (dt > 1) // 컨트롤러가 오랫동안 호출되지 않았습니다. 다시 초기화하십시오
+    { _L1_xtrack_i = 0.0f; }
+    
+    if (dt > 0.1)
+    { dt = 0.1; }
+
     _last_update_waypoint_us = now;
 
-    // Calculate L1 gain required for specified damping
+    // 지정된 댐핑에 필요한 L1 이득 계산
     float K_L1 = 4.0f * _L1_damping * _L1_damping;
 
-    // Get current position and velocity
-    if (_ahrs.get_location(_current_loc) == false) {
-        // if no GPS loc available, maintain last nav/target_bearing
-        _data_is_stale = true;
+    // 현재 위치 및 속도 확인
+    if (_ahrs.get_location(_current_loc) == false)
+    {
+        _data_is_stale = true; // 사용 가능한 GPS 위치가 없는 경우 마지막 탐색/표적_bearing을 유지
         return;
     }
 
@@ -228,9 +230,11 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
     // update _target_bearing_cd
     _target_bearing_cd = _current_loc.get_bearing_to(next_WP);
 
-    //Calculate groundspeed
+    //지상 속도 계산
     float groundSpeed = _groundspeed_vector.length();
-    if (groundSpeed < 0.1f) {
+    
+    if (groundSpeed < 0.1f)
+    {
         // use a small ground speed vector in the right direction,
         // allowing us to use the compass heading at zero GPS velocity
         groundSpeed = 0.1f;
@@ -248,9 +252,11 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
 
     // Check for AB zero length and track directly to the destination
     // if too small
-    if (AB.length() < 1.0e-6f) {
+    if (AB.length() < 1.0e-6f)
+    {
         AB = _current_loc.get_distance_NE(next_WP);
-        if (AB.length() < 1.0e-6f) {
+        if (AB.length() < 1.0e-6f)
+        {
             AB = Vector2f(cosf(get_yaw()), sinf(get_yaw()));
         }
     }
@@ -275,7 +281,10 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
         ltrackVel = _groundspeed_vector * (-A_air_unit); // Velocity along line
         Nu = atan2f(xtrackVel,ltrackVel);
         _nav_bearing = atan2f(-A_air_unit.y , -A_air_unit.x); // bearing (radians) from AC to L1 point
-    } else if (alongTrackDist > AB_length + groundSpeed*3) {
+    }
+    
+    else if (alongTrackDist > AB_length + groundSpeed*3)
+    {
         // we have passed point B by 3 seconds. Head towards B
         // Calc Nu to fly To WP B
         const Vector2f B_air = next_WP.get_distance_NE(_current_loc);
@@ -284,8 +293,10 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
         ltrackVel = _groundspeed_vector * (-B_air_unit); // Velocity along line
         Nu = atan2f(xtrackVel,ltrackVel);
         _nav_bearing = atan2f(-B_air_unit.y , -B_air_unit.x); // bearing (radians) from AC to L1 point
-    } else { //Calc Nu to fly along AB line
-
+    }
+    
+    else  //Calc Nu to fly along AB line
+    {
         //Calculate Nu2 angle (angle of velocity vector relative to line connecting waypoints)
         xtrackVel = _groundspeed_vector % AB; // Velocity cross track
         ltrackVel = _groundspeed_vector * AB; // Velocity along track
@@ -299,10 +310,14 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
         // compute integral error component to converge to a crosstrack of zero when traveling
         // straight but reset it when disabled or if it changes. That allows for much easier
         // tuning by having it re-converge each time it changes.
-        if (_L1_xtrack_i_gain <= 0 || !is_equal(_L1_xtrack_i_gain.get(), _L1_xtrack_i_gain_prev)) {
+        if (_L1_xtrack_i_gain <= 0 || !is_equal(_L1_xtrack_i_gain.get(), _L1_xtrack_i_gain_prev))
+        {
             _L1_xtrack_i = 0;
             _L1_xtrack_i_gain_prev = _L1_xtrack_i_gain;
-        } else if (fabsf(Nu1) < radians(5)) {
+        }
+        
+        else if (fabsf(Nu1) < radians(5))
+        {
             _L1_xtrack_i += Nu1 * _L1_xtrack_i_gain * dt;
 
             // an AHRS_TRIM_X=0.1 will drift to about 0.08 so 0.1 is a good worst-case to clip at
@@ -323,15 +338,14 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
     Nu = constrain_float(Nu, -1.5708f, +1.5708f);
     _latAccDem = K_L1 * groundSpeed * groundSpeed / _L1_dist * sinf(Nu);
 
-    // Waypoint capture status is always false during waypoint following
-    _WPcircle = false;
+    _WPcircle = false; // 웨이포인트를 추적하는 동안 웨이포인트 캡처 상태는 항상 거짓
 
     _bearing_error = Nu; // bearing error angle (radians), +ve to left of track
 
-    _data_is_stale = false; // status are correctly updated with current waypoint data
+    _data_is_stale = false; // 상태가 현재 웨이포인트 데이터로 올바르게 업데이트됨
 }
 
-// update L1 control for loitering
+// loitering을 위한 L1 컨트롤 업데이트
 void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_t loiter_direction)
 {
     Location _current_loc;
@@ -345,20 +359,18 @@ void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_
     float Kx = omega * omega;
     float Kv = 2.0f * _L1_damping * omega;
 
-    // Calculate L1 gain required for specified damping (used during waypoint capture)
+    // 지정된 댐핑에 필요한 L1 이득 계산(웨이포인트 캡처 중에 사용)
     float K_L1 = 4.0f * _L1_damping * _L1_damping;
 
-    //Get current position and velocity
-    if (_ahrs.get_location(_current_loc) == false) {
-        // if no GPS loc available, maintain last nav/target_bearing
-        _data_is_stale = true;
+    if (_ahrs.get_location(_current_loc) == false) //현재 위치와 속도 얻기
+    {
+        _data_is_stale = true; // 사용 가능한 GPS 위치가 없는 경우 마지막 탐색/표적_bearing을 유지
         return;
     }
 
     Vector2f _groundspeed_vector = _ahrs.groundspeed_vector();
 
-    //Calculate groundspeed
-    float groundSpeed = MAX(_groundspeed_vector.length() , 1.0f);
+    float groundSpeed = MAX(_groundspeed_vector.length() , 1.0f); //지상 속도 계산
 
 
     // update _target_bearing_cd
@@ -378,14 +390,17 @@ void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_
     // if too close to the waypoint, use the velocity vector
     // if the velocity vector is too small, use the heading vector
     Vector2f A_air_unit;
-    if (A_air.length() > 0.1f) {
-        A_air_unit = A_air.normalized();
-    } else {
-        if (_groundspeed_vector.length() < 0.1f) {
-            A_air_unit = Vector2f(cosf(_ahrs.yaw), sinf(_ahrs.yaw));
-        } else {
-            A_air_unit = _groundspeed_vector.normalized();
-        }
+
+    if (A_air.length() > 0.1f)
+    { A_air_unit = A_air.normalized(); }
+    
+    else
+    {
+        if (_groundspeed_vector.length() < 0.1f)
+        { A_air_unit = Vector2f(cosf(_ahrs.yaw), sinf(_ahrs.yaw)); }
+        
+        else
+        { A_air_unit = _groundspeed_vector.normalized(); }
     }
 
     //Calculate Nu to capture center_WP
@@ -415,9 +430,8 @@ void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_
     float velTangent = xtrackVelCap * float(loiter_direction);
 
     //Prevent PD demand from turning the wrong way by limiting the command when flying the wrong way
-    if (ltrackVelCap < 0.0f && velTangent < 0.0f) {
-        latAccDemCircPD =  MAX(latAccDemCircPD, 0.0f);
-    }
+    if (ltrackVelCap < 0.0f && velTangent < 0.0f)
+    { latAccDemCircPD =  MAX(latAccDemCircPD, 0.0f); }
 
     // Calculate centripetal acceleration demand
     float latAccDemCircCtr = velTangent * velTangent / MAX((0.5f * radius), (radius + xtrackErrCirc));
@@ -428,12 +442,16 @@ void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_
     // Perform switchover between 'capture' and 'circle' modes at the
     // point where the commands cross over to achieve a seamless transfer
     // Only fly 'capture' mode if outside the circle
-    if (xtrackErrCirc > 0.0f && loiter_direction * latAccDemCap < loiter_direction * latAccDemCirc) {
+    if (xtrackErrCirc > 0.0f && loiter_direction * latAccDemCap < loiter_direction * latAccDemCirc)
+    {
         _latAccDem = latAccDemCap;
         _WPcircle = false;
         _bearing_error = Nu; // angle between demanded and achieved velocity vector, +ve to left of track
         _nav_bearing = atan2f(-A_air_unit.y , -A_air_unit.x); // bearing (radians) from AC to L1 point
-    } else {
+    }
+    
+    else
+    {
         _latAccDem = latAccDemCirc;
         _WPcircle = true;
         _bearing_error = 0.0f; // bearing error (radians), +ve to left of track
@@ -444,7 +462,7 @@ void AP_L1_Control::update_loiter(const Location &center_WP, float radius, int8_
 }
 
 
-// update L1 control for heading hold navigation
+// 헤딩 홀드 내비게이션을 위한 L1 컨트롤 업데이트
 void AP_L1_Control::update_heading_hold(int32_t navigation_heading_cd)
 {
     // Calculate normalised frequency for tracking loop
@@ -482,10 +500,10 @@ void AP_L1_Control::update_heading_hold(int32_t navigation_heading_cd)
     Nu = constrain_float(Nu, -M_PI_2, M_PI_2);
     _latAccDem = 2.0f*sinf(Nu)*VomegaA;
 
-    _data_is_stale = false; // status are correctly updated with current waypoint data
+    _data_is_stale = false; // status가 현재 웨이포인트 데이터로 올바르게 업데이트됨
 }
 
-// update L1 control for level flight on current heading
+// 현재 헤딩의 수평 비행에 대한 L1 제어 업데이트
 void AP_L1_Control::update_level_flight(void)
 {
     // copy to _target_bearing_cd and _nav_bearing
@@ -494,10 +512,9 @@ void AP_L1_Control::update_level_flight(void)
     _bearing_error = 0;
     _crosstrack_error = 0;
 
-    // Waypoint capture status is always false during heading hold
-    _WPcircle = false;
+    _WPcircle = false; // 웨이포인트 캡처 상태는 헤딩 유지 중에 항상 거짓
 
     _latAccDem = 0;
 
-    _data_is_stale = false; // status are correctly updated with current waypoint data
+    _data_is_stale = false; // 상태가 현재 웨이포인트 데이터로 올바르게 업데이트됨
 }

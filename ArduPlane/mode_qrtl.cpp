@@ -7,7 +7,8 @@ bool ModeQRTL::_enter()
 {
     // treat QRTL as QLAND if we are in guided wait takeoff state, to cope
     // with failsafes during GUIDED->AUTO takeoff sequence
-    if (plane.quadplane.guided_wait_takeoff_on_mode_enter) {
+    if (plane.quadplane.guided_wait_takeoff_on_mode_enter)
+    {
        plane.set_mode(plane.mode_qland, ModeReason::QLAND_INSTEAD_OF_RTL);
        return true;
     }
@@ -87,7 +88,8 @@ void ModeQRTL::update()
 void ModeQRTL::run()
 {
     const uint32_t now = AP_HAL::millis();
-    if (quadplane.tailsitter.in_vtol_transition(now)) {
+    if (quadplane.tailsitter.in_vtol_transition(now))
+    {
         // Tailsitters in FW pull up phase of VTOL transition run FW controllers
         Mode::run();
         return;

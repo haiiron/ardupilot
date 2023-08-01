@@ -1248,10 +1248,8 @@ float QuadPlane::landing_descent_rate_cms(float height_above_ground)
         }    
     }
 
-    if (poscontrol.pilot_correction_active) {
-        // stop descent when repositioning
-        ret = MIN(0, ret);
-    }
+    if (poscontrol.pilot_correction_active)
+    { ret = MIN(0, ret); } // 위치를 조정할 때 하강 중지
 
     return ret;
 }
@@ -2201,9 +2199,9 @@ void QuadPlane::update_land_positioning(void)
     poscontrol.xy_correction += poscontrol.target_vel_cms.xy() * dt * 0.01;
 
     poscontrol.pilot_correction_active = (!is_zero(roll_in) || !is_zero(pitch_in));
-    if (poscontrol.pilot_correction_active) {
-        poscontrol.pilot_correction_done = true;
-    }
+
+    if (poscontrol.pilot_correction_active)
+    { poscontrol.pilot_correction_done = true; }
 }
 
 /*
@@ -3405,18 +3403,18 @@ bool QuadPlane::check_land_final(void)
  */
 bool QuadPlane::verify_vtol_land(void)
 {
-    if (!available()) {
-        return true;
-    }
+    if (!available())
+    { return true; }
 
     if (poscontrol.get_state() == QPOS_POSITION2) {
         // see if we should move onto the descend stage of landing
         const float descend_dist_threshold = 2.0;
         const float descend_speed_threshold = 3.0;
         bool reached_position = false;
-        if (poscontrol.pilot_correction_done) {
-            reached_position = !poscontrol.pilot_correction_active;
-        } else {
+
+        if (poscontrol.pilot_correction_done)
+        { reached_position = !poscontrol.pilot_correction_active; }
+        else {
             const float dist = (inertial_nav.get_position_neu_cm().topostype() - poscontrol.target_cm).xy().length() * 0.01;
             reached_position = dist < descend_dist_threshold;
         }

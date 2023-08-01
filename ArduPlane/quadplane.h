@@ -483,13 +483,14 @@ private:
     };
     class PosControlState {
     public:
-        enum position_control_state get_state() const {
-            return state;
-        }
+        enum position_control_state get_state() const
+        { return state; }
+
         void set_state(enum position_control_state s);
-        uint32_t time_since_state_start_ms() const {
-            return AP_HAL::millis() - last_state_change_ms;
-        }
+
+        uint32_t time_since_state_start_ms() const
+        { return AP_HAL::millis() - last_state_change_ms; }
+        
         Vector3p target_cm;
         Vector2f xy_correction;
         Vector3f target_vel_cms;
