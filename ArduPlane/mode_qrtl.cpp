@@ -78,9 +78,7 @@ bool ModeQRTL::_enter()
 }
 
 void ModeQRTL::update()
-{
-    plane.mode_qstabilize.update();
-}
+{ plane.mode_qstabilize.update(); }
 
 /*
   handle QRTL mode
@@ -155,22 +153,21 @@ void ModeQRTL::run()
             break;
         }
 
-        case SubMode::RTL: {
+        case SubMode::RTL:
+        {
             quadplane.vtol_position_controller();
-            if (poscontrol.get_state() > QuadPlane::QPOS_POSITION2) {
-                // change target altitude to home alt
-                plane.next_WP_loc.alt = plane.home.alt;
-            }
-            if (poscontrol.get_state() >= QuadPlane::QPOS_POSITION2) {
-                // start landing logic
-                quadplane.verify_vtol_land();
-            }
+
+            if (poscontrol.get_state() > QuadPlane::QPOS_POSITION2)
+            { plane.next_WP_loc.alt = plane.home.alt; } // change target altitude to home
+
+            if (poscontrol.get_state() >= QuadPlane::QPOS_POSITION2)
+            { quadplane.verify_vtol_land(); } // start landing logic
 
             // when in approach allow stick mixing
             if (quadplane.poscontrol.get_state() == QuadPlane::QPOS_AIRBRAKE ||
-                quadplane.poscontrol.get_state() == QuadPlane::QPOS_APPROACH) {
-                plane.stabilize_stick_mixing_fbw();
-            }
+                quadplane.poscontrol.get_state() == QuadPlane::QPOS_APPROACH)
+            { plane.stabilize_stick_mixing_fbw(); }
+            
             break;
         }
     }

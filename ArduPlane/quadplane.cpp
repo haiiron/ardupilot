@@ -3406,7 +3406,8 @@ bool QuadPlane::verify_vtol_land(void)
     if (!available())
     { return true; }
 
-    if (poscontrol.get_state() == QPOS_POSITION2) {
+    if (poscontrol.get_state() == QPOS_POSITION2)
+    {
         // see if we should move onto the descend stage of landing
         const float descend_dist_threshold = 2.0;
         const float descend_speed_threshold = 3.0;
@@ -3414,37 +3415,43 @@ bool QuadPlane::verify_vtol_land(void)
 
         if (poscontrol.pilot_correction_done)
         { reached_position = !poscontrol.pilot_correction_active; }
-        else {
+        
+        else
+        {
             const float dist = (inertial_nav.get_position_neu_cm().topostype() - poscontrol.target_cm).xy().length() * 0.01;
             reached_position = dist < descend_dist_threshold;
         }
+        
         Vector2f target_vel;
-        if (AP_HAL::millis() - poscontrol.last_velocity_match_ms < 1000) {
-            target_vel = poscontrol.velocity_match;
-        }
+        if (AP_HAL::millis() - poscontrol.last_velocity_match_ms < 1000)
+        { target_vel = poscontrol.velocity_match; }
+
         Vector3f vel_ned;
         UNUSED_RESULT(plane.ahrs.get_velocity_NED(vel_ned));
         
-        if (reached_position &&
-            (vel_ned.xy() - target_vel).length() < descend_speed_threshold) {
+        if (reached_position && (vel_ned.xy() - target_vel).length() < descend_speed_threshold)
+        {
             poscontrol.set_state(QPOS_LAND_DESCEND);
             poscontrol.pilot_correction_done = false;
             pos_control->set_lean_angle_max_cd(0);
             poscontrol.xy_correction.zero();
-#if AP_FENCE_ENABLED
+            #if AP_FENCE_ENABLED
             plane.fence.auto_disable_fence_for_landing();
-#endif
-#if AP_LANDINGGEAR_ENABLED
+            #endif
+            #if AP_LANDINGGEAR_ENABLED
             plane.g2.landing_gear.deploy_for_landing();
-#endif
+            #endif
             last_land_final_agl = plane.relative_ground_altitude(plane.g.rangefinder_landing);
             gcs().send_text(MAV_SEVERITY_INFO,"Land descend started");
-            if (plane.control_mode == &plane.mode_auto) {
+
+            if (plane.control_mode == &plane.mode_auto)
+            {
                 // set height to mission height, so we can use the mission
-                // WP height for triggering land final if no rangefinder
-                // available
+                // WP height for triggering land final if no rangefinder available
                 plane.set_next_WP(plane.mission.get_current_nav_cmd().content.location);
-            } else {
+            }
+            else
+            {
                 plane.set_next_WP(plane.next_WP_loc);
                 plane.next_WP_loc.alt = ahrs.get_home().alt;
             }
@@ -3452,14 +3459,14 @@ bool QuadPlane::verify_vtol_land(void)
     }
 
     // at land_final_alt begin final landing
-    if (poscontrol.get_state() == QPOS_LAND_DESCEND && check_land_final()) {
+    if (poscontrol.get_state() == QPOS_LAND_DESCEND && check_land_final())
+    {
         poscontrol.set_state(QPOS_LAND_FINAL);
 
 #if AP_ICENGINE_ENABLED
         // cut IC engine if enabled
-        if (land_icengine_cut != 0) {
-            plane.g2.ice_control.engine_control(0, 0, 0);
-        }
+        if (land_icengine_cut != 0)
+        { plane.g2.ice_control.engine_control(0, 0, 0); }
 #endif  // AP_ICENGINE_ENABLED
         gcs().send_text(MAV_SEVERITY_INFO,"Land final started");
     }
@@ -3473,18 +3480,22 @@ bool QuadPlane::verify_vtol_land(void)
 
     if (plane.in_auto_mission_id(MAV_CMD_NAV_PAYLOAD_PLACE) &&
         (poscontrol.get_state() == QPOS_LAND_DESCEND ||
-         poscontrol.get_state() == QPOS_LAND_FINAL)) {
+         poscontrol.get_state() == QPOS_LAND_FINAL))
+    {
         const auto &cmd = plane.mission.get_current_nav_cmd();
-        if (cmd.p1 > 0 && plane.current_loc.alt*0.01 < land_descend_start_alt - cmd.p1*0.01) {
+        if (cmd.p1 > 0 && plane.current_loc.alt*0.01 < land_descend_start_alt - cmd.p1*0.01)
+        {
             gcs().send_text(MAV_SEVERITY_INFO,"Payload place aborted");
             poscontrol.set_state(QPOS_LAND_ABORT);
         }
     }
     
-    if (check_land_complete() && plane.mission.continue_after_land()) {
+    if (check_land_complete() && plane.mission.continue_after_land())
+    {
         gcs().send_text(MAV_SEVERITY_INFO,"Mission continue");
         return true;
     }
+
     return false;
 }
 

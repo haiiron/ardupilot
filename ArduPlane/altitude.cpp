@@ -89,8 +89,7 @@ int32_t Plane::get_RTL_altitude_cm() const
 }
 
 /*
-  return relative altitude in meters (relative to terrain, if available,
-  or home otherwise)
+  미터 단위로 상대 고도 반환 (사용 가능한 경우 지형으로, 그렇지 않은 경우 home 고도)
  */
 float Plane::relative_ground_altitude(bool use_rangefinder_if_available, bool use_terrain_if_available)
 {
@@ -130,14 +129,14 @@ float Plane::relative_ground_altitude(bool use_rangefinder_if_available, bool us
     return relative_altitude;
 }
 
-// Helper for above method using terrain if the vehicle is currently terrain following
+// 기체가 현재 지형을 따르고 있는 경우 지형을 사용하는 방법에 대한 도우미
 float Plane::relative_ground_altitude(bool use_rangefinder_if_available)
 {
-#if AP_TERRAIN_AVAILABLE
+    #if AP_TERRAIN_AVAILABLE
     return relative_ground_altitude(use_rangefinder_if_available, target_altitude.terrain_following);
-#else
+    #else
     return relative_ground_altitude(use_rangefinder_if_available, false);
-#endif
+    #endif
 }
 
 

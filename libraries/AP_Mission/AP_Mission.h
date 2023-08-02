@@ -700,9 +700,7 @@ public:
       disarm and mission logic should stop
      */
     bool continue_after_land_check_for_takeoff(void);
-    bool continue_after_land(void) const {
-        return (_options.get() & AP_MISSION_MASK_CONTINUE_AFTER_LAND) != 0;
-    }
+    bool continue_after_land(void) const { return (_options.get() & AP_MISSION_MASK_CONTINUE_AFTER_LAND) != 0; }
 
     // user settable parameters
     static const struct AP_Param::GroupInfo var_info[];

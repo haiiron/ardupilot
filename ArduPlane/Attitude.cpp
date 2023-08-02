@@ -115,7 +115,9 @@ void Plane::stabilize_roll()
         // handle this is to ensure both go in the same direction from
         // zero
         nav_roll_cd += 18000;
-        if (ahrs.roll_sensor < 0) nav_roll_cd -= 36000;
+
+        if (ahrs.roll_sensor < 0)
+            nav_roll_cd -= 36000;
     }
 
     const float roll_out = stabilize_roll_get_roll_out();
@@ -622,9 +624,8 @@ void Plane::update_load_factor(void)
         // aircraft can be maneuvered with a bad airspeed estimate. At
         // 25 degrees the load factor is 1.1 (10%)
         int32_t roll_limit = degrees(acosf(sq(1.0f / max_load_factor)))*100;
-        if (roll_limit < 2500) {
-            roll_limit = 2500;
-        }
+        if (roll_limit < 2500)
+        { roll_limit = 2500; }
         nav_roll_cd = constrain_int32(nav_roll_cd, -roll_limit, roll_limit);
         roll_limit_cd = MIN(roll_limit_cd, roll_limit);
     }    

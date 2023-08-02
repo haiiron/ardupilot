@@ -12,7 +12,7 @@
 bool ModeFlyhigh::_enter()
 {
     gcs().send_text(MAV_SEVERITY_INFO,"Flyhigh mode is for precland");
-    gcs().send_text(MAV_SEVERITY_INFO,"23-07-31 developed by haiiron : qrtl 호출한 착륙모드");
+    gcs().send_text(MAV_SEVERITY_INFO,"23-08-01 developed by haiiron : qrtl 호출한 착륙모드");
     
     plane.precland_statemachine.init(); //precland 구현
 

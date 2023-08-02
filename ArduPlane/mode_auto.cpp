@@ -4,8 +4,7 @@
 bool ModeAuto::_enter()
 {
 #if HAL_QUADPLANE_ENABLED
-    // check if we should refuse auto mode due to a missing takeoff in
-    // guided_wait_takeoff state
+    // guided_wait_delay 상태에서 이륙 누락으로 인해 자동 모드를 거부해야 하는지 확인
     if (plane.previous_mode == &plane.mode_guided && quadplane.guided_wait_takeoff_on_mode_enter)
     {
         if (!plane.mission.starts_with_takeoff_cmd())
@@ -17,17 +16,14 @@ bool ModeAuto::_enter()
     }
     
     if (plane.quadplane.available() && plane.quadplane.enable == 2)
-    {
-        plane.auto_state.vtol_mode = true;
-    }
+    { plane.auto_state.vtol_mode = true; }
     
     else
-    {
-        plane.auto_state.vtol_mode = false;
-    }
+    { plane.auto_state.vtol_mode = false; }
 #else
     plane.auto_state.vtol_mode = false;
 #endif
+
     plane.next_WP_loc = plane.prev_WP_loc = plane.current_loc;
     // start or resume the mission, based on MIS_AUTORESET
     plane.mission.start_or_resume();

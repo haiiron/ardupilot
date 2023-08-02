@@ -113,16 +113,15 @@ void AP_Mission::start()
 
 /// stop - stops mission execution.  subsequent calls to update() will have no effect until the mission is started or resumed
 void AP_Mission::stop()
-{
-    _flags.state = MISSION_STOPPED;
-}
+{ _flags.state = MISSION_STOPPED; }
 
 /// resume - continues the mission execution from where we last left off
 ///     previous running commands will be re-initialized
 void AP_Mission::resume()
 {
     // if mission had completed then start it from the first command
-    if (_flags.state == MISSION_COMPLETE) {
+    if (_flags.state == MISSION_COMPLETE)
+    {
         start();
         return;
     }

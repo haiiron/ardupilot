@@ -227,12 +227,12 @@ void AP_L1_Control::update_waypoint(const Location &prev_WP, const Location &nex
 
     Vector2f _groundspeed_vector = _ahrs.groundspeed_vector();
 
-    // update _target_bearing_cd
+    // _target_bearing_cd 업데이트
     _target_bearing_cd = _current_loc.get_bearing_to(next_WP);
 
     //지상 속도 계산
     float groundSpeed = _groundspeed_vector.length();
-    
+
     if (groundSpeed < 0.1f)
     {
         // use a small ground speed vector in the right direction,

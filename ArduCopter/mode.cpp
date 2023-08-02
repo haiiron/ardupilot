@@ -790,11 +790,14 @@ void Mode::land_run_horizontal_control()
 void Mode::land_run_normal_or_precland(bool pause_descent)
 {
 #if AC_PRECLAND_ENABLED
-    if (pause_descent || !copter.precland.enabled()) {
+    if (pause_descent || !copter.precland.enabled())
+    {
         // we don't want to start descending immediately or prec land is disabled
         // in both cases just run simple land controllers
         land_run_horiz_and_vert_control(pause_descent);
-    } else {
+    }
+    else
+    {
         // prec land is enabled and we have not paused descent
         // the state machine takes care of the entire prec landing procedure
         precland_run();

@@ -64,7 +64,7 @@ public:
 
     // 현재 헤딩의 수평 비행에 대한 L1 제어 업데이트
     void update_level_flight(void) override;
-    
+    // 기체가 WayPoint를 도달했을 때 True
     bool reached_loiter_target(void) override;
 
     // NAVL1_PERIOD 설정
