@@ -147,6 +147,15 @@ protected:
     // mode specific pre-arm checks
     virtual bool _pre_arm_checks(size_t buflen, char *buffer) const;
 
+//FIXME: retry position은 일단 
+    // 착륙을 재시도하기 위해 사전 착륙 상태 기계가 명령하는 위치로 이동합니다
+    // 통과된 위치는 NED(미터)로 예상됩니다
+//    void precland_retry_position(const Vector3f &retry_pos);
+
+    // precland statemachine 실행. precision landing이 필요한 모드에서 호출할 것.
+    // 이 기능은 착륙 전부터 precland 실패, 재시도 및 실패 안전 조치에 이르기까지 모든 것을 처리
+    void precland_run();
+
 #if HAL_QUADPLANE_ENABLED
     // References for convenience, used by QModes
     AC_PosControl*& pos_control;
@@ -156,6 +165,7 @@ protected:
     QuadPlane::PosControlState &poscontrol;
 #endif
     AP_AHRS& ahrs;
+
 };
 
 

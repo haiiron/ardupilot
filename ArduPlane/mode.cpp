@@ -228,3 +228,96 @@ void Mode::reset_controllers()
 
 bool Mode::is_taking_off() const
 { return (plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF); }
+/*
+// 착륙을 재시도하기 위해 사전 착륙 상태 기계가 명령하는 위치로 이동
+// 통과된 위치는 m 단위의 NED
+void Mode::precland_retry_position(const Vector3f &retry_pos)
+{
+    if (!plane.failsafe.radio) {
+        if ((g.throttle_behavior & THR_BEHAVE_HIGH_THROTTLE_CANCELS_LAND) != 0 && copter.rc_throttle_control_in_filter.get() > LAND_CANCEL_TRIGGER_THR){
+            AP::logger().Write_Event(LogEvent::LAND_CANCELLED_BY_PILOT);
+            // exit land if throttle is high
+            if (!set_mode(Mode::Number::LOITER, ModeReason::THROTTLE_LAND_ESCAPE)) {
+                set_mode(Mode::Number::ALT_HOLD, ModeReason::THROTTLE_LAND_ESCAPE);
+            }
+        }
+
+        // allow user to take control during repositioning. Note: copied from land_run_horizontal_control()
+        // To-Do: this code exists at several different places in slightly different forms and that should be fixed
+        if (g.land_repositioning) {
+            float target_roll = 0.0f;
+            float target_pitch = 0.0f;
+            // convert pilot input to lean angles
+            get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max_cd());
+
+            // record if pilot has overridden roll or pitch
+            if (!is_zero(target_roll) || !is_zero(target_pitch)) {
+                if (!copter.ap.land_repo_active) {
+                    AP::logger().Write_Event(LogEvent::LAND_REPO_ACTIVE);
+                }
+                // this flag will be checked by prec land state machine later and any further landing retires will be cancelled
+                copter.ap.land_repo_active = true;
+            }
+        }
+    }
+
+    Vector3p retry_pos_NEU{retry_pos.x, retry_pos.y, retry_pos.z * -1.0f};
+    // pos controller expects input in NEU cm's
+    retry_pos_NEU = retry_pos_NEU * 100.0f;
+    pos_control->input_pos_xyz(retry_pos_NEU, 0.0f, 1000.0f);
+
+    // run position controllers
+    pos_control->update_xy_controller();
+    pos_control->update_z_controller();
+
+    // call attitude controller
+    attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
+
+}
+*/
+
+// precland statemachine 실행. precision landing이 필요한 모드에서 호출할 것.
+// 이 기능은 착륙 전부터 precland 실패, 재시도 및 실패 안전 조치에 이르기까지 모든 것을 처리
+void Mode::precland_run()
+{
+        // 필요한 경우 나중에 재시도 pos로 업데이트
+        Vector3f retry_pos;
+
+        switch (plane.precland_statemachine.update(retry_pos))
+        {    
+            case FH_PrecLand_StateMachine::Status::RETRYING: // 다른 위치로 가서 착륙을 재시도
+                gcs().send_text(MAV_SEVERITY_INFO,"Status::RETRYING");
+                gcs().send_text(MAV_SEVERITY_INFO,"Vec x : %f ",retry_pos.x);
+                gcs().send_text(MAV_SEVERITY_INFO,"Vec x : %f ",retry_pos.y);
+                gcs().send_text(MAV_SEVERITY_INFO,"Vec x : %f ",retry_pos.z);
+                break;
+
+            case FH_PrecLand_StateMachine::Status::FAILSAFE:
+            {
+                // we have hit a failsafe. Failsafe can only mean two things, we either want to stop permanently till user takes over or land
+                switch (plane.precland_statemachine.get_failsafe_actions())
+                {
+                case FH_PrecLand_StateMachine::FailSafeAction::DESCEND:
+                    // 사전 착륙 목표물은 확실히 보이지 않음, 일반 하강.
+                    gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::DESCEND");
+                    break;
+                case FH_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
+                    // 이 인수에서 "true"를 보내면 하강이 중지.
+                    gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::HOLD_POS");
+                    break;
+                }
+            break;
+            }
+            
+            case FH_PrecLand_StateMachine::Status::ERROR:
+                // 일어나서는 안 됨, 버그발생.
+                gcs().send_text(MAV_SEVERITY_INFO,"Status::ERROR <Bug>");
+                FALLTHROUGH;
+            
+            case FH_PrecLand_StateMachine::Status::DESCEND:
+                // 랜드 컨트롤러를 실행. 이것은 전방의 목표물이 보이면 목표물을 향해 내려감.
+                // 그렇지 않으면 수직으로 하강
+                gcs().send_text(MAV_SEVERITY_INFO,"Status::DESCEND");
+                break;
+        }
+}

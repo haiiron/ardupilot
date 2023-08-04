@@ -689,9 +689,8 @@ void Mode::land_run_horizontal_control()
     Vector2f vel_correction;
 
     // relax loiter target if we might be landed
-    if (copter.ap.land_complete_maybe) {
-        pos_control->soften_for_landing_xy();
-    }
+    if (copter.ap.land_complete_maybe)
+    { pos_control->soften_for_landing_xy(); }
 
     // process pilot inputs
     if (!copter.failsafe.radio) {
@@ -792,8 +791,7 @@ void Mode::land_run_normal_or_precland(bool pause_descent)
 #if AC_PRECLAND_ENABLED
     if (pause_descent || !copter.precland.enabled())
     {
-        // we don't want to start descending immediately or prec land is disabled
-        // in both cases just run simple land controllers
+        //즉시 하강을 시작하거나 precland가 비활성화되는 것을 원하지 않음. 단순 랜드 컨트롤러 실행
         land_run_horiz_and_vert_control(pause_descent);
     }
     else
@@ -812,13 +810,15 @@ void Mode::land_run_normal_or_precland(bool pause_descent)
 // The passed in location is expected to be NED and in m
 void Mode::precland_retry_position(const Vector3f &retry_pos)
 {
-    if (!copter.failsafe.radio) {
-        if ((g.throttle_behavior & THR_BEHAVE_HIGH_THROTTLE_CANCELS_LAND) != 0 && copter.rc_throttle_control_in_filter.get() > LAND_CANCEL_TRIGGER_THR){
+    if (!copter.failsafe.radio)
+    {
+        if ((g.throttle_behavior & THR_BEHAVE_HIGH_THROTTLE_CANCELS_LAND) != 0 &&
+            copter.rc_throttle_control_in_filter.get() > LAND_CANCEL_TRIGGER_THR)
+        {
             AP::logger().Write_Event(LogEvent::LAND_CANCELLED_BY_PILOT);
             // exit land if throttle is high
-            if (!set_mode(Mode::Number::LOITER, ModeReason::THROTTLE_LAND_ESCAPE)) {
-                set_mode(Mode::Number::ALT_HOLD, ModeReason::THROTTLE_LAND_ESCAPE);
-            }
+            if (!set_mode(Mode::Number::LOITER, ModeReason::THROTTLE_LAND_ESCAPE))
+            { set_mode(Mode::Number::ALT_HOLD, ModeReason::THROTTLE_LAND_ESCAPE); }
         }
 
         // allow user to take control during repositioning. Note: copied from land_run_horizontal_control()
@@ -859,44 +859,51 @@ void Mode::precland_retry_position(const Vector3f &retry_pos)
 void Mode::precland_run()
 {
     // if user is taking control, we will not run the statemachine, and simply land (may or may not be on target)
-    if (!copter.ap.land_repo_active) {
+    if (!copter.ap.land_repo_active)
+    {
         // This will get updated later to a retry pos if needed
         Vector3f retry_pos;
 
-        switch (copter.precland_statemachine.update(retry_pos)) {
-        case AC_PrecLand_StateMachine::Status::RETRYING:
-            // we want to retry landing by going to another position
-            precland_retry_position(retry_pos);
-            break;
+        switch (copter.precland_statemachine.update(retry_pos))
+        {
+                
+            case AC_PrecLand_StateMachine::Status::RETRYING:
+                // we want to retry landing by going to another position
+                precland_retry_position(retry_pos);
+                break;
 
-        case AC_PrecLand_StateMachine::Status::FAILSAFE: {
-            // we have hit a failsafe. Failsafe can only mean two things, we either want to stop permanently till user takes over or land
-            switch (copter.precland_statemachine.get_failsafe_actions()) {
-            case AC_PrecLand_StateMachine::FailSafeAction::DESCEND:
-                // descend normally, prec land target is definitely not in sight
+            case AC_PrecLand_StateMachine::Status::FAILSAFE:
+            {
+                // we have hit a failsafe. Failsafe can only mean two things, we either want to stop permanently till user takes over or land
+                switch (copter.precland_statemachine.get_failsafe_actions())
+                {
+                case AC_PrecLand_StateMachine::FailSafeAction::DESCEND:
+                    // descend normally, prec land target is definitely not in sight
+                    land_run_horiz_and_vert_control();
+                    break;
+                case AC_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
+                    // sending "true" in this argument will stop the descend
+                    land_run_horiz_and_vert_control(true);
+                    break;
+                }
+            break;
+            }
+            
+            case AC_PrecLand_StateMachine::Status::ERROR:
+                // should never happen, is certainly a bug. Report then descend
+                INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
+                FALLTHROUGH;
+            
+            case AC_PrecLand_StateMachine::Status::DESCEND:
+                // run land controller. This will descend towards the target if prec land target is in sight
+                // else it will just descend vertically
                 land_run_horiz_and_vert_control();
                 break;
-            case AC_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
-                // sending "true" in this argument will stop the descend
-                land_run_horiz_and_vert_control(true);
-                break;
-            }
-            break;
         }
-        case AC_PrecLand_StateMachine::Status::ERROR:
-            // should never happen, is certainly a bug. Report then descend
-            INTERNAL_ERROR(AP_InternalError::error_t::flow_of_control);
-            FALLTHROUGH;
-        case AC_PrecLand_StateMachine::Status::DESCEND:
-            // run land controller. This will descend towards the target if prec land target is in sight
-            // else it will just descend vertically
-            land_run_horiz_and_vert_control();
-            break;
-        }
-    } else {
-        // just land, since user has taken over controls, it does not make sense to run any retries or failsafe measures
-        land_run_horiz_and_vert_control();
     }
+    
+    else // 그냥 착륙 진행... 제어권을 넘겨받았기 때문에 재시도 또는 안전 조치를 실행하는 것은 말이 되지 않다함.
+    { land_run_horiz_and_vert_control(); }
 }
 #endif
 

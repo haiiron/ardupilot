@@ -34,7 +34,7 @@ const AP_Param::GroupInfo FH_PrecLand::var_info[] = {
         // @Description: Precision Land Type
         // @Values: 0:None, 1:IRLock, 2:SITL_Gazebo, 3:SITL
         // @User: Advanced
-        AP_GROUPINFO("TYPE",    1, FH_PrecLand, _type, 0),
+        AP_GROUPINFO("TYPE",    1, FH_PrecLand, _type, 1),
 
         // @Param: YAW_ALIGN
         // @DisplayName: Sensor yaw alignment
@@ -107,7 +107,7 @@ const AP_Param::GroupInfo FH_PrecLand::var_info[] = {
         // @Description: Precland sensor bus for I2C sensors.
         // @Values: -1:DefaultBus,0:InternalI2C,1:ExternalI2C
         // @User: Advanced
-        AP_GROUPINFO("BUS",    8, FH_PrecLand, _bus, 0),
+        AP_GROUPINFO("BUS",    8, FH_PrecLand, _bus, 1),
 
         // @Param: LAG
         // @DisplayName: Precision Landing sensor lag

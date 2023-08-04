@@ -73,21 +73,23 @@ void ModeLand::run()
 void ModeLand::gps_run()
 {
     // disarm when the landing detector says we've landed
-    if (copter.ap.land_complete && motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE) {
+    if (copter.ap.land_complete && motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE)
+    {
         copter.arming.disarm(AP_Arming::Method::LANDED);
     }
 
     // Land State Machine Determination
-    if (is_disarmed_or_landed()) {
-        make_safe_ground_handling();
-    } else {
+    if (is_disarmed_or_landed())
+    { make_safe_ground_handling(); }
+    
+    else
+    {
         // set motors to full range
         motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
         // pause before beginning land descent
-        if (land_pause && millis()-land_start_time >= LAND_WITH_DELAY_MS) {
-            land_pause = false;
-        }
+        if (land_pause && millis()-land_start_time >= LAND_WITH_DELAY_MS)
+        { land_pause = false; }
 
         // run normal landing or precision landing (if enabled)
         land_run_normal_or_precland(land_pause);

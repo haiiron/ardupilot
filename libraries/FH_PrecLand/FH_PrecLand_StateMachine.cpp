@@ -35,13 +35,13 @@ void FH_PrecLand_StateMachine::reset_failed_landing_statemachine()
     _retry_state = RetryLanding::INIT;
     failsafe_initialized = false;
 }
-
-// Run Prec Land State Machine. During Prec Landing, we might encounter four scenarios:
-// 1. We had the target in sight, but have lost it now. 2. We never had the target in sight and user wants to land.
-// 3. We have the target in sight and can continue landing. 4. The sensor is out of range
-// This method deals with all of these scenarios
-// Returns the action needed to be done by the vehicle.
-// Parameters: Vector3f "retry_pos_m" is filled with the required location if we need to retry landing.
+// 사전 착륙 상태 기계를 실행합니다. 사전 착륙 중에 다음 네 가지 시나리오가 발생할 수 있습니다:
+// 1. 타겟 실종
+// 2. 타겟이 보이지 않으나 착륙 진행 하고자 함.
+// 3. 타겟 할당, 착륙 진행가능
+// 4. 센서가 범위를 벗어남
+// 위의 모든 시나리오를 다룸, 수행해야 하는 작업을 반환
+// 매개 변수: 착륙을 재시도해야 할 경우 Vector 3f "retry_pos_m"이 필요한 위치로 입력됨.
 FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::update(Vector3f &retry_pos_m)
 {
 
@@ -49,14 +49,13 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::update(Vector3f &retr
     FH_PrecLand *_precland = FH::fh_precland();
     if (_precland == nullptr) { return Status::ERROR; } // should never happen
 
-    if (!_precland->enabled()) {
-        // precland is not enabled, prec land state machine should not be called!
-        return Status::ERROR;
-    }
+    if (!_precland->enabled()) // precland 비 활성화, precland state machine 호출하지 아니함.
+    { return Status::ERROR; }
 
     FH_PrecLand::TargetState precland_target_state =  _precland->get_target_state();
 
-    switch (precland_target_state) {
+    switch (precland_target_state)
+    {
         case FH_PrecLand::TargetState::TARGET_RECENTLY_LOST:
             // we have lost the target but had it in sight at least once recently
             // action will depend on what user wants
