@@ -34,10 +34,7 @@ extern const AP_HAL::HAL& hal;
 
 void AP_IRLock_I2C::init(int8_t bus)
 {
-    if (bus < 0) {
-        // default to i2c external bus
-        bus = 1;
-    }
+    if (bus < 0) { bus = 1; } // default to i2c external bus
     dev = std::move(hal.i2c_mgr->get_device(bus, IRLOCK_I2C_ADDRESS));
     if (!dev) {
         return;
@@ -64,14 +61,15 @@ bool AP_IRLock_I2C::sync_frame_start(void)
     _last_read_ms = AP_HAL::millis();
 
     uint8_t count=40;
-    while (count-- && sync_word != IRLOCK_SYNC && sync_word != 0) {
+    while (count-- && sync_word != IRLOCK_SYNC && sync_word != 0)
+    {
         uint8_t sync_byte;
-        if (!dev->transfer(nullptr, 0, &sync_byte, 1)) {
-            return false;
-        }
-        if (sync_byte == 0) {
-            break;
-        }
+        if (!dev->transfer(nullptr, 0, &sync_byte, 1))
+        { return false; }
+
+        if (sync_byte == 0)
+        { break; }
+        
         sync_word = (sync_word>>8) | (uint32_t(sync_byte)<<24);
     }
     return sync_word == IRLOCK_SYNC;
@@ -95,9 +93,8 @@ void AP_IRLock_I2C::pixel_to_1M_plane(float pix_x, float pix_y, float &ret_x, fl
 */
 bool AP_IRLock_I2C::read_block(struct frame &irframe)
 {
-    if (!dev->transfer(nullptr, 0, (uint8_t*)&irframe, sizeof(irframe))) {
-        return false;
-    }
+    if (!dev->transfer(nullptr, 0, (uint8_t*)&irframe, sizeof(irframe)))
+    { return false; }
 
     // record sensor successfully responded to I2C request
     _last_read_ms = AP_HAL::millis();
@@ -113,14 +110,12 @@ bool AP_IRLock_I2C::read_block(struct frame &irframe)
 
 void AP_IRLock_I2C::read_frames(void)
 {
-    if (!sync_frame_start()) {
-        return;
-    }
+    if (!sync_frame_start())
+    { return; }
     struct frame irframe;
     
-    if (!read_block(irframe)) {
-        return;
-    }
+    if (!read_block(irframe))
+    { return; }
 
     int16_t corner1_pix_x = irframe.pixel_x - irframe.pixel_size_x/2;
     int16_t corner1_pix_y = irframe.pixel_y - irframe.pixel_size_y/2;
@@ -157,14 +152,13 @@ void AP_IRLock_I2C::read_frames(void)
 bool AP_IRLock_I2C::update()
 {
     bool new_data = false;
-    if (!dev) {
-        return false;
-    }
+    if (!dev) { return false; }
+
     WITH_SEMAPHORE(sem);
 
-    if (_last_update_ms != _target_info.timestamp) {
-        new_data = true;
-    }
+    if (_last_update_ms != _target_info.timestamp)
+    { new_data = true; }
+
     _last_update_ms = _target_info.timestamp;
     _flags.healthy = (AP_HAL::millis() - _last_read_ms < 100);
 

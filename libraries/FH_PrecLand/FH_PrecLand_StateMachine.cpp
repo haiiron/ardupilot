@@ -7,24 +7,22 @@
 #include <AP_AHRS/AP_AHRS.h>
 
 static const float    MAX_POS_ERROR_M          = 0.75f;  // Maximum possition error for retry locations
-static const uint32_t FAILSAFE_INIT_TIMEOUT_MS = 7000;   // Timeout in ms before failsafe measures are started. During this period vehicle is completely stopped to give user the time to take over
+static const uint32_t FAILSAFE_INIT_TIMEOUT_MS = 10000;   // Timeout in ms before failsafe measures are started. During this period vehicle is completely stopped to give user the time to take over
 static const float    RETRY_OFFSET_ALT_M       = 1.5f;  // This gets added to the altitude of the retry location
 
 // state machine 초기화, 모드를 전환할 때마다 호출.
 void FH_PrecLand_StateMachine::init()
 {
     FH_PrecLand *_precland = FH::fh_precland();
-    if (_precland == nullptr) { return; } // precland not enabled
+    if (_precland == nullptr) { return; } // precland enabled 안되어있음.
 
-    if (!_precland->enabled()) {
-        // precland is not enabled, prec land state machine methods should not be called!
-        return;
-    }
+    // precland is not enabled, prec land state machine methods should not be called!
+    if (!_precland->enabled()) { return; }
+
     // init is only called ONCE per mode change. So in a particuar mode we can retry only a finite times.
     // The counter will be reset if the statemachine is called from a different mode
     _retry_count = 0;
-    // reset every other statemachine
-    reset_failed_landing_statemachine();
+    reset_failed_landing_statemachine(); // reset every other statemachine
 }
 
 // Reset the landing statemachines. This needs to be called everytime the landing target is back in sight.
@@ -88,11 +86,14 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::get_target_lost_actio
     FH_PrecLand *_precland = FH::fh_precland();
     if (_precland == nullptr) { return Status::ERROR; } // should never happen
 
-    switch (landing_target_lost_action) {
-        case TargetLostAction::INIT: {
+    switch (landing_target_lost_action)
+    {
+        case TargetLostAction::INIT:
+        {
             // figure out how strict the user is with the landing
             const RetryStrictness strictness =_precland->get_retry_strictness();
-            switch (strictness) {
+            switch (strictness)
+            {
                 case RetryStrictness::NORMAL:
                 case RetryStrictness::VERY_STRICT:
                     // We eventually want to retry landing, but lets descend for some time and hope the target gets in sight
@@ -116,8 +117,7 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::get_target_lost_actio
                 landing_target_lost_action = TargetLostAction::RETRY_LANDING;
                 _retry_state = RetryLanding::INIT;
             }
-            // still descending, no other action
-            return Status::DESCEND;
+            return Status::DESCEND; // still descending, no other action
 
         case TargetLostAction::RETRY_LANDING:
             // retry the landing by going to another position
@@ -139,15 +139,12 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::get_target_lost_actio
 FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::retry_landing(Vector3f &retry_pos_m)
 {
     FH_PrecLand *_precland = FH::fh_precland();
-    if (_precland == nullptr) {
-        // should never happen
-        return Status::ERROR;
-    }
 
-    if (_precland->get_max_retry_allowed() == 0) {
-        // user does not want retry
-        return Status::FAILSAFE;
-    }
+    if (_precland == nullptr)
+    { return Status::ERROR; } // should never happen
+
+    if (_precland->get_max_retry_allowed() == 0)
+    {  return Status::FAILSAFE; } // user does not want retry
 
     if (_retry_count > _precland->get_max_retry_allowed()) {
         // we have exhausted the amount of times vehicle was allowed to retry landing
@@ -158,17 +155,18 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::retry_landing(Vector3
     // get the retry position. This depends on what retry behavior has been set by user
     Vector3f go_to_pos;
     const RetryAction retry_action = _precland->get_retry_behaviour();
-    if (retry_action == RetryAction::GO_TO_TARGET_LOC) {
-        _precland->get_last_detected_landing_pos(go_to_pos);
-    } else if (retry_action == RetryAction::GO_TO_LAST_LOC) {
-        _precland->get_last_vehicle_pos_when_target_detected(go_to_pos);
-    }
+    if (retry_action == RetryAction::GO_TO_TARGET_LOC)
+    { _precland->get_last_detected_landing_pos(go_to_pos); }
+
+    else if (retry_action == RetryAction::GO_TO_LAST_LOC)
+    { _precland->get_last_vehicle_pos_when_target_detected(go_to_pos); }
 
     // add a little bit offset so the vehicle climbs slightly higher than where it was
     // remember this is "D" frame and in meters's
     go_to_pos.z -= RETRY_OFFSET_ALT_M;
 
-    switch (_retry_state) {
+    switch (_retry_state)
+    {
         case RetryLanding::INIT:
             // Init the Retry
             _retry_count ++;
@@ -179,22 +177,22 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::retry_landing(Vector3
             retry_pos_m = go_to_pos;
             return Status::RETRYING;
 
-        case RetryLanding::IN_PROGRESS: {
+        case RetryLanding::IN_PROGRESS:
+        {
             // continue converging towards the target till we are close by
             retry_pos_m = go_to_pos;
             Vector3f pos;
-            if (!AP::ahrs().get_relative_position_NED_origin(pos)) {
-                return Status::ERROR;
-            }
+            if (!AP::ahrs().get_relative_position_NED_origin(pos))
+            { return Status::ERROR; }
             const float dist_to_target = (go_to_pos-pos).length();
-            if ((dist_to_target < MAX_POS_ERROR_M)) {
-                // we have approx reached landing location previously detected
-                _retry_state = RetryLanding::DESCEND;
-            }
+            if ((dist_to_target < MAX_POS_ERROR_M))
+            { _retry_state = RetryLanding::DESCEND; } // 이전에 감지된 착륙 지점에 거의 도달
+
             return Status::RETRYING;
         }
 
-        case RetryLanding::DESCEND: {
+        case RetryLanding::DESCEND:
+        {
             // descend a little bit before completing the retry
             // This will descend to the original height of where landing target was first detected
             Vector3f pos;
@@ -203,8 +201,8 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::retry_landing(Vector3
             // z_target is in "D" frame
             const float z_target = go_to_pos.z + RETRY_OFFSET_ALT_M;
             retry_pos_m = Vector3f{pos.x, pos.y, z_target};
-            if (fabsf(pos.z - retry_pos_m.z) < MAX_POS_ERROR_M) {
-                // we have descended to the original height where we started the climb from
+            if (fabsf(pos.z - retry_pos_m.z) < MAX_POS_ERROR_M)
+            { // we have descended to the original height where we started the climb from
                 _retry_state = RetryLanding::COMPLETE;
                 gcs().send_text(MAV_SEVERITY_INFO, "PrecLand: Retry Completed");
             }
@@ -227,41 +225,40 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::retry_landing(Vector3
 FH_PrecLand_StateMachine::FailSafeAction FH_PrecLand_StateMachine::get_failsafe_actions()
 {
     FH_PrecLand *_precland = FH::fh_precland();
-    if (_precland == nullptr) {
-        // should never happen, just descend
-        return FailSafeAction::DESCEND;
-    }
+    
+    // should never happen, just descend
+    if (_precland == nullptr) { return FailSafeAction::DESCEND; }
 
-    if (!failsafe_initialized) {
-        // start the timer
-        failsafe_start_ms = AP_HAL::millis();
+    if (!failsafe_initialized)
+    {
+        failsafe_start_ms = AP_HAL::millis(); // start the timer
         failsafe_initialized = true;
         gcs().send_text(MAV_SEVERITY_INFO, "PrecLand: Failsafe Measures");
     }
 
     // Depending on the strictness we will either land vertically, wait for some time and then land vertically, not land at all
     const RetryStrictness strictness= _precland->get_retry_strictness();
-    switch (strictness) {
+    switch (strictness)
+    {
         case RetryStrictness::VERY_STRICT:
             // user does not want to land on anything but the target
             // stop landing (hover)
             return FailSafeAction::HOLD_POS;
 
         case RetryStrictness::NORMAL:
-            if (AP_HAL::millis() - failsafe_start_ms < FAILSAFE_INIT_TIMEOUT_MS) {
+            if (AP_HAL::millis() - failsafe_start_ms < FAILSAFE_INIT_TIMEOUT_MS)
+            {
                 // stop the vehicle for at least a few seconds before descending
                 // this might give user the chance to take over
                 // we do not want to be too linent in landing vertically because of the strictness set by the user
                 return FailSafeAction::HOLD_POS;
             }
-            // land the vehicle vertically
+            // failsafe 수직착륙
             return FailSafeAction::DESCEND;
 
         case RetryStrictness::NOT_STRICT:
             // User wants to prioritize landing over staying in the air
             return FailSafeAction::DESCEND;
     }
-
-    // should never reach here
-    return FailSafeAction::DESCEND;
+    return FailSafeAction::DESCEND; // 여기까지 올 일은 없음.. (온다면 failsafe 수직착륙)
 }

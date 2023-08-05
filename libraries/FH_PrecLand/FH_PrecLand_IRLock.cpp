@@ -18,10 +18,12 @@ void FH_PrecLand_IRLock::update()
 {
     // update health
     _state.healthy = irlock.healthy();
-    
     // get new sensor data
-    irlock.update();
+    bool isIR = irlock.update();
     
+    if(isIR)
+        gcs().send_text(MAV_SEVERITY_INFO, "IR_WORK");
+
     if (irlock.num_targets() > 0 && irlock.last_update_ms() != _los_meas_time_ms) {
         irlock.get_unit_vector_body(_los_meas_body);
         _have_los_meas = true;

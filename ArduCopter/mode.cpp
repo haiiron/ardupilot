@@ -869,6 +869,7 @@ void Mode::precland_run()
                 
             case AC_PrecLand_StateMachine::Status::RETRYING:
                 // we want to retry landing by going to another position
+                gcs().send_text(MAV_SEVERITY_INFO,"retry");
                 precland_retry_position(retry_pos);
                 break;
 
@@ -879,10 +880,12 @@ void Mode::precland_run()
                 {
                 case AC_PrecLand_StateMachine::FailSafeAction::DESCEND:
                     // descend normally, prec land target is definitely not in sight
+                    gcs().send_text(MAV_SEVERITY_INFO,"failsafe descend");
                     land_run_horiz_and_vert_control();
                     break;
                 case AC_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
                     // sending "true" in this argument will stop the descend
+                    gcs().send_text(MAV_SEVERITY_INFO,"hold pos");
                     land_run_horiz_and_vert_control(true);
                     break;
                 }
@@ -898,6 +901,7 @@ void Mode::precland_run()
                 // run land controller. This will descend towards the target if prec land target is in sight
                 // else it will just descend vertically
                 land_run_horiz_and_vert_control();
+                gcs().send_text(MAV_SEVERITY_INFO,"good descend");
                 break;
         }
     }

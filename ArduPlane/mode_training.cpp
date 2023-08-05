@@ -3,7 +3,7 @@
 
 void ModeTraining::update()
 {
-    gcs().send_text(MAV_SEVERITY_INFO,"Training mode - Precland 호출 테스트");
+//    gcs().send_text(MAV_SEVERITY_INFO,"Training mode - Precland 호출 테스트");
 }
 
 

@@ -317,7 +317,7 @@ void Mode::precland_run()
             case FH_PrecLand_StateMachine::Status::DESCEND:
                 // 랜드 컨트롤러를 실행. 이것은 전방의 목표물이 보이면 목표물을 향해 내려감.
                 // 그렇지 않으면 수직으로 하강
-                gcs().send_text(MAV_SEVERITY_INFO,"Status::DESCEND");
+                gcs().send_text(MAV_SEVERITY_INFO,"Target detect landing down");
                 break;
         }
 }
