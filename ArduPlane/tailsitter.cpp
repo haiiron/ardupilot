@@ -579,9 +579,9 @@ void Tailsitter::check_input(void)
  */
 bool Tailsitter::in_vtol_transition(uint32_t now) const
 {
-    if (!enabled() || !quadplane.in_vtol_mode()) {
-        return false;
-    }
+    if (!enabled() || !quadplane.in_vtol_mode())
+    { return false; }
+    
     if (transition->transition_state == Tailsitter_Transition::TRANSITION_ANGLE_WAIT_VTOL) {
         return true;
     }

@@ -147,6 +147,8 @@ protected:
     // mode specific pre-arm checks
     virtual bool _pre_arm_checks(size_t buflen, char *buffer) const;
 
+    void flyhigh_precland_land_run(bool pause_descent = false);
+
 //FIXME: retry position은 일단 
     // 착륙을 재시도하기 위해 사전 착륙 상태 기계가 명령하는 위치로 이동합니다
     // 통과된 위치는 NED(미터)로 예상됩니다

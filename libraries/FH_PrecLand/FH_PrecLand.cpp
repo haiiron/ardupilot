@@ -15,10 +15,10 @@
 
 extern const AP_HAL::HAL& hal;
 
-static const uint32_t EKF_INIT_TIME_MS = 2000; // EKF initialisation requires this many milliseconds of good sensor data
-static const uint32_t EKF_INIT_SENSOR_MIN_UPDATE_MS = 500; // Sensor must update within this many ms during EKF init, else init will fail
-static const uint32_t LANDING_TARGET_TIMEOUT_MS = 2000; // Sensor must update within this many ms, else prec landing will be switched off
-static const uint32_t LANDING_TARGET_LOST_TIMEOUT_MS = 180000; // Target will be considered as "lost" if the last known location of the target is more than this many ms ago
+static const uint32_t EKF_INIT_TIME_MS = 2000; // EKF 초기화는 해당하는 milliseconds의 양호한 센서데이터를 필요로 함.
+static const uint32_t EKF_INIT_SENSOR_MIN_UPDATE_MS = 500; // EKF init 동안 센서가 다음의 ms 이내에 업데이트되어야 함. 그렇지 않으면 init 실패.
+static const uint32_t LANDING_TARGET_TIMEOUT_MS = 2000; // 센서는 수 ms 이내에 업데이트해야 함. 그렇지 않으면 precland가 꺼짐.
+static const uint32_t LANDING_TARGET_LOST_TIMEOUT_MS = 180000; // 대상의 마지막 알려진 위치가 수 ms 전보다 많은 경우 대상은 "잃어버린" 것으로 간주
 static const float    LANDING_TARGET_LOST_DIST_THRESH_M  = 30; // If the last known location of the landing target is beyond this many meters, then we will consider it lost
 
 const AP_Param::GroupInfo FH_PrecLand::var_info[] = {
@@ -107,7 +107,7 @@ const AP_Param::GroupInfo FH_PrecLand::var_info[] = {
         // @Description: Precland sensor bus for I2C sensors.
         // @Values: -1:DefaultBus,0:InternalI2C,1:ExternalI2C
         // @User: Advanced
-        AP_GROUPINFO("BUS",    8, FH_PrecLand, _bus, 1),
+        AP_GROUPINFO("BUS",    8, FH_PrecLand, _bus, 0),
 
         // @Param: LAG
         // @DisplayName: Precision Landing sensor lag
@@ -275,7 +275,8 @@ void FH_PrecLand::update(float rangefinder_alt_cm, bool rangefinder_alt_valid)
     check_target_status(rangefinder_alt_m, rangefinder_alt_valid);
 
     const uint32_t now = AP_HAL::millis();
-    if (now - last_log_ms > 40) {  // 25Hz
+    if (now - last_log_ms > 40) // 25Hz
+    {
         last_log_ms = now;
         Write_Precland();
     }

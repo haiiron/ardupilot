@@ -228,6 +228,54 @@ void Mode::reset_controllers()
 
 bool Mode::is_taking_off() const
 { return (plane.flight_stage == AP_FixedWing::FlightStage::TAKEOFF); }
+
+//FIXME: [part of flyhigh precland]
+void Mode::flyhigh_precland_land_run(bool pause_descent)
+{
+    if(!pause_descent)
+    {
+        gcs().send_text(MAV_SEVERITY_INFO,"is land ? : %s",quadplane.check_land_complete() ? "true" : "false");
+
+        const uint32_t now = AP_HAL::millis();
+    
+    if (quadplane.tailsitter.in_vtol_transition(now))
+    {
+        // VTOL 전환 실행 FW 컨트롤러 FW 풀업 단계에서 Tailsitters
+        Mode::run();
+        return;
+    }
+
+    if(poscontrol.get_state() < QuadPlane::QPOS_LAND_FINAL && quadplane.check_land_final())
+    {
+        poscontrol.set_state(QuadPlane::QPOS_LAND_FINAL);
+        quadplane.setup_target_position();
+#if AP_ICENGINE_ENABLED
+        // IC engine 종료 (IC engine이 할당 되어있다면.)
+        if (quadplane.land_icengine_cut != 0)
+        { plane.g2.ice_control.engine_control(0, 0, 0); }
+#endif  // AP_ICENGINE_ENABLED
+    }
+    float height_above_ground = plane.relative_ground_altitude(plane.g.rangefinder_landing);
+    float descent_rate_cms = quadplane.landing_descent_rate_cms(height_above_ground);
+
+    if (poscontrol.get_state() == QuadPlane::QPOS_LAND_FINAL && !quadplane.option_is_set(QuadPlane::OPTION::DISABLE_GROUND_EFFECT_COMP))
+    { ahrs.set_touchdown_expected(true); }
+
+    pos_control->land_at_climb_rate_cm(-descent_rate_cms, descent_rate_cms>0);
+    quadplane.check_land_complete();
+
+//FIXME: 이 부분 호출 안되었을 떄랑 될 떄 어떻게 동작하는가 테스트하기!
+
+    quadplane.run_z_controller();
+
+    // Stabilize with fixed wing surfaces
+    plane.stabilize_roll();
+    plane.stabilize_pitch();
+    }
+
+
+}
+
 /*
 // 착륙을 재시도하기 위해 사전 착륙 상태 기계가 명령하는 위치로 이동
 // 통과된 위치는 m 단위의 NED
@@ -297,14 +345,15 @@ void Mode::precland_run()
                 // we have hit a failsafe. Failsafe can only mean two things, we either want to stop permanently till user takes over or land
                 switch (plane.precland_statemachine.get_failsafe_actions())
                 {
-                case FH_PrecLand_StateMachine::FailSafeAction::DESCEND:
-                    // 사전 착륙 목표물은 확실히 보이지 않음, 일반 하강.
-                    gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::DESCEND");
-                    break;
-                case FH_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
-                    // 이 인수에서 "true"를 보내면 하강이 중지.
-                    gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::HOLD_POS");
-                    break;
+                    case FH_PrecLand_StateMachine::FailSafeAction::DESCEND:
+                        // 사전 착륙 목표물은 확실히 보이지 않음, 일반 하강.
+                        gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::DESCEND");
+                        flyhigh_precland_land_run();
+                        break;
+                    case FH_PrecLand_StateMachine::FailSafeAction::HOLD_POS:
+                        // 이 인수에서 "true"를 보내면 하강이 중지.
+                        gcs().send_text(MAV_SEVERITY_INFO,"FailSafeAction::HOLD_POS");
+                        break;
                 }
             break;
             }
@@ -318,6 +367,7 @@ void Mode::precland_run()
                 // 랜드 컨트롤러를 실행. 이것은 전방의 목표물이 보이면 목표물을 향해 내려감.
                 // 그렇지 않으면 수직으로 하강
                 gcs().send_text(MAV_SEVERITY_INFO,"Target detect landing down");
+                flyhigh_precland_land_run();
                 break;
         }
 }

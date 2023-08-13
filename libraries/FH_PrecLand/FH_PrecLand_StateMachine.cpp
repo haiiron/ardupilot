@@ -73,8 +73,7 @@ FH_PrecLand_StateMachine::Status FH_PrecLand_StateMachine::update(Vector3f &retr
             return Status::DESCEND;
     }
 
-    // should never reach here, all values are handled above
-    return Status::ERROR;
+    return Status::ERROR; // 여기까지 올 수 없음.
 }
 
 

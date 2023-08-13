@@ -29,7 +29,8 @@ void ModeQLoiter::update()
 void ModeQLoiter::run()
 {
     const uint32_t now = AP_HAL::millis();
-    if (quadplane.tailsitter.in_vtol_transition(now)) {
+    if (quadplane.tailsitter.in_vtol_transition(now))
+    {
         // Tailsitters in FW pull up phase of VTOL transition run FW controllers
         Mode::run();
         return;
@@ -95,32 +96,33 @@ void ModeQLoiter::run()
                                                                   plane.nav_pitch_cd,
                                                                   quadplane.get_desired_yaw_rate_cds());
 
-    if (plane.control_mode == &plane.mode_qland) {
-        if (poscontrol.get_state() < QuadPlane::QPOS_LAND_FINAL && quadplane.check_land_final()) {
+    if (plane.control_mode == &plane.mode_qland)
+    {
+        if(poscontrol.get_state() < QuadPlane::QPOS_LAND_FINAL && quadplane.check_land_final())
+        {
             poscontrol.set_state(QuadPlane::QPOS_LAND_FINAL);
             quadplane.setup_target_position();
 #if AP_ICENGINE_ENABLED
             // cut IC engine if enabled
-            if (quadplane.land_icengine_cut != 0) {
-                plane.g2.ice_control.engine_control(0, 0, 0);
-            }
+            if (quadplane.land_icengine_cut != 0)
+            { plane.g2.ice_control.engine_control(0, 0, 0); }
 #endif  // AP_ICENGINE_ENABLED
         }
         float height_above_ground = plane.relative_ground_altitude(plane.g.rangefinder_landing);
         float descent_rate_cms = quadplane.landing_descent_rate_cms(height_above_ground);
 
-        if (poscontrol.get_state() == QuadPlane::QPOS_LAND_FINAL && !quadplane.option_is_set(QuadPlane::OPTION::DISABLE_GROUND_EFFECT_COMP)) {
-            ahrs.set_touchdown_expected(true);
-        }
+        if (poscontrol.get_state() == QuadPlane::QPOS_LAND_FINAL && !quadplane.option_is_set(QuadPlane::OPTION::DISABLE_GROUND_EFFECT_COMP))
+        { ahrs.set_touchdown_expected(true); }
 
         pos_control->land_at_climb_rate_cm(-descent_rate_cms, descent_rate_cms>0);
         quadplane.check_land_complete();
-    } else if (plane.control_mode == &plane.mode_guided && quadplane.guided_takeoff) {
-        quadplane.set_climb_rate_cms(0);
-    } else {
-        // update altitude target and call position controller
-        quadplane.set_climb_rate_cms(quadplane.get_pilot_desired_climb_rate_cms());
     }
+    else if (plane.control_mode == &plane.mode_guided && quadplane.guided_takeoff)
+    { quadplane.set_climb_rate_cms(0); }
+
+    else // update altitude target and call position controller
+    { quadplane.set_climb_rate_cms(quadplane.get_pilot_desired_climb_rate_cms()); }
+
     quadplane.run_z_controller();
 
     // Stabilize with fixed wing surfaces

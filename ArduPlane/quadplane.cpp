@@ -2230,19 +2230,26 @@ void QuadPlane::run_xy_controller(float accel_limit)
 void QuadPlane::poscontrol_init_approach(void)
 {
     const float dist = plane.current_loc.get_distance(plane.next_WP_loc);
-    if (option_is_set(QuadPlane::OPTION::DISABLE_APPROACH)) {
+    if (option_is_set(QuadPlane::OPTION::DISABLE_APPROACH))
+    {
         // go straight to QPOS_POSITION1
         poscontrol.set_state(QPOS_POSITION1);
         gcs().send_text(MAV_SEVERITY_INFO,"VTOL Position1 d=%.1f", dist);
-    } else if (poscontrol.get_state() != QPOS_APPROACH) {
+    }
+    else if (poscontrol.get_state() != QPOS_APPROACH)
+    {
         // check if we are close to the destination. We don't want to
         // do a full approach when very close
-        if (dist < transition_threshold()) {
-            if (tailsitter.enabled() || motors->get_desired_spool_state() == AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED) {
+        if (dist < transition_threshold())
+        {
+            if (tailsitter.enabled() || motors->get_desired_spool_state() == AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED)
+            {
                 gcs().send_text(MAV_SEVERITY_INFO,"VTOL Position1 d=%.1f", dist);
                 poscontrol.set_state(QPOS_POSITION1);
                 transition->set_last_fw_pitch();
-            } else {
+            }
+            else
+            {
                 gcs().send_text(MAV_SEVERITY_INFO,"VTOL airbrake v=%.1f d=%.0f sd=%.0f h=%.1f",
                                 plane.ahrs.groundspeed(),
                                 dist,
@@ -2250,7 +2257,9 @@ void QuadPlane::poscontrol_init_approach(void)
                                 plane.relative_ground_altitude(plane.g.rangefinder_landing));
                 poscontrol.set_state(QPOS_AIRBRAKE);
             }
-        } else {
+        }
+        else
+        {
             gcs().send_text(MAV_SEVERITY_INFO,"VTOL approach d=%.1f", dist);
             poscontrol.set_state(QPOS_APPROACH);
         }
@@ -3219,9 +3228,7 @@ bool QuadPlane::do_vtol_takeoff(const AP_Mission::Mission_Command& cmd)
  */
 bool QuadPlane::do_vtol_land(const AP_Mission::Mission_Command& cmd)
 {
-    if (!setup()) {
-        return false;
-    }
+    if (!setup()) { return false; }
 
     plane.set_next_WP(cmd.content.location);
     // initially aim for current altitude
@@ -3347,15 +3354,16 @@ bool QuadPlane::land_detector(uint32_t timeout_ms)
  */
 bool QuadPlane::check_land_complete(void)
 {
-    if (poscontrol.get_state() != QPOS_LAND_FINAL) {
-        // only apply to final landing phase
-        return false;
-    }
-    if (land_detector(4000)) {
+    if (poscontrol.get_state() != QPOS_LAND_FINAL) // only apply to final landing phase
+    { return false; }
+
+    if (land_detector(4000))
+    {
         poscontrol.set_state(QPOS_LAND_COMPLETE);
         gcs().send_text(MAV_SEVERITY_INFO,"Land complete");
 
-        if (plane.in_auto_mission_id(MAV_CMD_NAV_PAYLOAD_PLACE)) {
+        if (plane.in_auto_mission_id(MAV_CMD_NAV_PAYLOAD_PLACE))
+        {
             // for payload place with full landing we shutdown motors
             // and wait for the lua script to trigger a climb (using
             // landing abort) or disarm
@@ -3364,7 +3372,8 @@ bool QuadPlane::check_land_complete(void)
         }
 
         if (plane.control_mode != &plane.mode_auto ||
-            !plane.mission.continue_after_land()) {
+            !plane.mission.continue_after_land())
+        {
             // disarm on land unless we have MIS_OPTIONS setup to
             // continue after land in AUTO
             plane.arming.disarm(AP_Arming::Method::LANDED);
